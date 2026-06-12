@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Contact Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0f0f13;--surface:#1a1a22;--surface2:#22222e;--border:#2e2e3e;
+  --accent:#7c6af7;--accent2:#a78bfa;--text:#f0f0f5;--text2:#9090a8;--text3:#5a5a72;
+  --green:#34d399;--red:#f87171;--yellow:#fbbf24;--blue:#60a5fa;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;padding-bottom:80px;}
+
+/* SCREENS */
+.screen{display:none !important;}
+.screen.active{display:block !important;}
+#loginScreen.active{display:flex !important;min-height:100vh;align-items:center;justify-content:center;padding:20px;flex-direction:column;}
+
+/* LOGIN */
+.login-card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:36px 28px;width:100%;max-width:340px;text-align:center;}
+.login-icon{font-size:44px;margin-bottom:12px;}
+.login-title{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;margin-bottom:4px;}
+.login-sub{color:var(--text2);font-size:13px;margin-bottom:16px;}
+.user-select-wrap{display:flex;flex-direction:column;gap:8px;margin-bottom:8px;text-align:left;}
+.user-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:11px 14px;border-radius:12px;cursor:pointer;display:flex;align-items:center;gap:10px;transition:all 0.15s;font-size:14px;font-family:'Inter',sans-serif;width:100%;}
+.user-btn:hover{border-color:var(--accent);}
+.u-avatar{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;font-family:'Space Grotesk',sans-serif;flex-shrink:0;}
+.u-info{flex:1;text-align:left;}
+.u-name{font-weight:600;font-size:14px;}
+.u-role{font-size:11px;color:var(--text3);}
+.u-badge{font-size:10px;padding:2px 7px;border-radius:6px;background:var(--accent);color:white;}
+.pin-section{display:none;text-align:left;}
+.pin-back{background:none;border:none;color:var(--text3);font-size:13px;cursor:pointer;margin-bottom:12px;display:flex;align-items:center;gap:4px;font-family:'Inter',sans-serif;}
+.pin-who{font-size:13px;color:var(--text2);margin-bottom:16px;text-align:center;}
+.pin-who strong{color:var(--text);}
+.pin-dots{display:flex;justify-content:center;gap:12px;margin-bottom:20px;}
+.pin-dot{width:13px;height:13px;border-radius:50%;border:2px solid var(--border);transition:all 0.2s;}
+.pin-dot.filled{background:var(--accent2);border-color:var(--accent2);}
+.pin-pad{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;max-width:210px;margin:0 auto;}
+.pin-key{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-size:20px;font-weight:600;padding:15px;border-radius:12px;cursor:pointer;transition:all 0.15s;font-family:'Space Grotesk',sans-serif;}
+.pin-key:active{background:var(--accent);border-color:var(--accent);transform:scale(0.95);}
+.pin-error{color:var(--red);font-size:12px;margin-top:10px;min-height:18px;text-align:center;}
+
+/* TOPBAR */
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.topbar-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;display:flex;align-items:center;gap:7px;}
+.topbar-title span{color:var(--accent2);}
+.topbar-right{display:flex;gap:7px;align-items:center;}
+.user-chip{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:5px;}
+.chip-dot{width:7px;height:7px;border-radius:50%;background:var(--green);}
+.icon-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:15px;transition:all 0.15s;}
+.icon-btn:hover{border-color:var(--accent);color:var(--accent2);}
+
+/* SEARCH + FILTER */
+.search-wrap{padding:11px 16px;background:var(--surface);border-bottom:1px solid var(--border);}
+.search-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 14px;border-radius:10px;font-size:14px;outline:none;font-family:'Inter',sans-serif;transition:border-color 0.15s;}
+.search-input::placeholder{color:var(--text3);}
+.search-input:focus{border-color:var(--accent);}
+.cat-scroll{display:flex;gap:7px;padding:10px 16px;overflow-x:auto;scrollbar-width:none;}
+.cat-scroll::-webkit-scrollbar{display:none;}
+.cat-chip{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:5px 13px;border-radius:20px;font-size:12px;font-weight:500;cursor:pointer;white-space:nowrap;transition:all 0.15s;}
+.cat-chip.active{background:var(--accent);border-color:var(--accent);color:white;}
+.stats-bar{padding:3px 16px 7px;font-size:12px;color:var(--text3);}
+
+/* CONTACTS */
+.contacts-list{padding:0 16px;}
+.section-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;padding:14px 0 7px;}
+.contact-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px;margin-bottom:9px;cursor:pointer;transition:all 0.15s;display:flex;align-items:center;gap:11px;}
+.contact-card:hover{border-color:var(--accent);}
+.contact-avatar{width:44px;height:44px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:19px;font-weight:700;font-family:'Space Grotesk',sans-serif;flex-shrink:0;}
+.contact-info{flex:1;min-width:0;}
+.contact-name{font-weight:600;font-size:14px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.contact-meta{font-size:12px;color:var(--text2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.contact-badges{display:flex;gap:3px;flex-shrink:0;}
+.badge{width:24px;height:24px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;background:var(--surface2);}
+
+/* DETAIL MODAL */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:flex-end;justify-content:center;}
+.modal-overlay.open{display:flex;}
+.modal-sheet{background:var(--surface);border-radius:22px 22px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:0 0 30px;animation:slideUp 0.22s ease;}
+@keyframes slideUp{from{transform:translateY(100%);opacity:0;}to{transform:translateY(0);opacity:1;}}
+.modal-handle{width:34px;height:4px;background:var(--border);border-radius:2px;margin:11px auto 0;}
+.modal-header{padding:18px 18px 0;display:flex;align-items:center;gap:13px;}
+.modal-avatar{width:60px;height:60px;border-radius:15px;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
+.modal-name{font-family:'Space Grotesk',sans-serif;font-size:21px;font-weight:700;margin-bottom:3px;}
+.modal-cat{font-size:12px;padding:3px 9px;border-radius:9px;display:inline-block;font-weight:500;}
+.modal-note-box{margin:12px 18px 0;background:var(--surface2);border-radius:10px;padding:9px 13px;font-size:13px;color:var(--text2);font-style:italic;}
+.modal-actions{display:flex;gap:7px;padding:14px 18px;flex-wrap:wrap;}
+.action-btn{flex:1;min-width:72px;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 6px;border-radius:11px;font-size:11px;font-weight:500;cursor:pointer;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:4px;transition:all 0.15s;}
+.action-btn .action-icon{font-size:19px;}
+.action-btn:active{transform:scale(0.95);}
+.action-btn.call{border-color:var(--green);color:var(--green);}
+.action-btn.whatsapp{border-color:#25d366;color:#25d366;}
+.action-btn.location{border-color:var(--blue);color:var(--blue);}
+.action-btn.share-btn{border-color:var(--accent2);color:var(--accent2);}
+.detail-rows{padding:0 18px;}
+.detail-row{display:flex;align-items:center;gap:11px;padding:11px 0;border-bottom:1px solid var(--border);text-decoration:none;color:var(--text);}
+.detail-row:last-child{border-bottom:none;}
+.detail-row-icon{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0;background:#ffffff11;}
+.detail-row-content{flex:1;min-width:0;}
+.detail-row-label{font-size:11px;color:var(--text3);margin-bottom:1px;}
+.detail-row-value{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.detail-row-action{font-size:17px;color:var(--text3);}
+.modal-footer-btns{display:flex;gap:9px;padding:14px 18px 0;}
+.edit-btn{flex:1;background:var(--accent);color:white;border:none;padding:13px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+.del-btn{background:var(--surface2);border:1px solid var(--red);color:var(--red);padding:13px 16px;border-radius:12px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;}
+
+/* FORM */
+.form-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;padding:18px 18px 14px;border-bottom:1px solid var(--border);}
+.form-body{padding:14px 18px;}
+.form-group{margin-bottom:13px;}
+.form-label{font-size:12px;color:#ffffff;margin-bottom:5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;display:block;}
+.form-input{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 13px;border-radius:10px;font-size:14px;outline:none;font-family:'Inter',sans-serif;transition:border-color 0.15s;}
+.form-input:focus{border-color:var(--accent);}
+.form-input::placeholder{color:var(--text3);}
+.form-select{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:10px 13px;border-radius:10px;font-size:14px;outline:none;font-family:'Inter',sans-serif;appearance:none;}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:9px;}
+.form-section-title{font-size:15px;font-weight:700;color:#ffffff;text-transform:uppercase;letter-spacing:0.5px;margin:18px 0 10px;display:flex;align-items:center;gap:6px;}
+.save-btn{width:100%;background:var(--accent);color:white;border:none;padding:13px;border-radius:12px;font-size:14px;font-weight:600;cursor:pointer;margin-top:5px;font-family:'Inter',sans-serif;}
+.cancel-btn{width:100%;background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:11px;border-radius:12px;font-size:13px;cursor:pointer;margin-top:7px;font-family:'Inter',sans-serif;}
+textarea.form-input{resize:vertical;min-height:65px;}
+
+/* FAB */
+.fab{position:fixed;bottom:22px;right:18px;width:54px;height:54px;border-radius:15px;background:var(--accent);color:white;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 22px rgba(124,106,247,0.4);display:none;align-items:center;justify-content:center;z-index:150;transition:transform 0.15s;}
+.fab.visible{display:flex;}
+.fab:active{transform:scale(0.92);}
+
+/* ADMIN */
+.admin-topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:13px 16px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:100;}
+.admin-back{background:none;border:none;color:var(--text2);cursor:pointer;font-size:18px;padding:4px;}
+.admin-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;}
+.admin-section{padding:16px;}
+.admin-section-title{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:1px;margin-bottom:12px;}
+.user-row{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:13px;margin-bottom:9px;display:flex;align-items:center;gap:11px;}
+.user-row-avatar{width:42px;height:42px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;font-family:'Space Grotesk',sans-serif;flex-shrink:0;}
+.user-row-info{flex:1;min-width:0;}
+.user-row-name{font-weight:600;font-size:14px;margin-bottom:2px;}
+.user-row-meta{font-size:11px;color:var(--text3);}
+.user-row-actions{display:flex;gap:5px;flex-wrap:wrap;}
+.u-action-btn{background:var(--surface2);border:1px solid var(--border);color:var(--text2);padding:6px 9px;border-radius:8px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;transition:all 0.15s;white-space:nowrap;}
+.u-action-btn:hover{border-color:var(--accent);color:var(--accent2);}
+.u-action-btn.danger{border-color:var(--red);color:var(--red);}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.status-dot.on{background:var(--green);}
+.status-dot.off{background:var(--text3);}
+.add-card{background:var(--surface);border:1px dashed var(--accent);border-radius:13px;padding:14px;text-align:center;cursor:pointer;color:var(--accent2);font-size:13px;font-weight:500;margin-bottom:9px;}
+.pin-change-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:14px;margin-bottom:9px;}
+.pin-change-row{display:flex;gap:8px;align-items:flex-end;}
+.pin-input-admin{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 12px;border-radius:9px;font-size:16px;outline:none;font-family:'Space Grotesk',sans-serif;letter-spacing:4px;transition:border-color 0.15s;}
+.pin-input-admin:focus{border-color:var(--accent);}
+.pin-save-btn{background:var(--accent);color:white;border:none;padding:9px 14px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+
+/* MINI MODAL */
+.mini-modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.mini-modal-overlay.open{display:flex;}
+.mini-modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:24px;width:100%;max-width:320px;}
+.mini-modal-title{font-family:'Space Grotesk',sans-serif;font-size:17px;font-weight:700;margin-bottom:6px;}
+.mini-modal-sub{font-size:13px;color:var(--text2);margin-bottom:18px;}
+.mini-modal-btns{display:flex;gap:8px;margin-top:16px;}
+.mini-btn{flex:1;padding:11px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;}
+.mini-btn.primary{background:var(--accent);color:white;}
+.mini-btn.secondary{background:var(--surface2);border:1px solid var(--border);color:var(--text2);}
+
+/* EMPTY / LOADING */
+.empty-state{text-align:center;padding:55px 20px;color:var(--text3);}
+.empty-icon{font-size:44px;margin-bottom:11px;}
+.empty-text{font-size:14px;margin-bottom:5px;color:var(--text2);}
+.empty-sub{font-size:12px;}
+.loading{text-align:center;padding:38px;color:var(--text3);font-size:13px;}
+.spinner{width:22px;height:22px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite;margin:0 auto 11px;}
+@keyframes spin{to{transform:rotate(360deg);}}
+
+/* TOAST */
+.toast{position:fixed;bottom:85px;left:50%;transform:translateX(-50%) translateY(20px);background:var(--surface2);border:1px solid var(--border);color:var(--text);padding:9px 18px;border-radius:18px;font-size:13px;opacity:0;transition:all 0.3s;z-index:400;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen active">
+  <div class="login-card">
+    <div class="login-icon">📒</div>
+    <div class="login-title">Contact Diary</div>
+    <div class="login-sub" id="loginSub">Select your profile</div>
+    <div id="userSelectWrap" class="user-select-wrap"></div>
+    <div id="pinSection" class="pin-section">
+      <button class="pin-back" onclick="backToUsers()">← Back</button>
+      <div class="pin-who" id="pinWho"></div>
+      <div class="pin-dots">
+        <div class="pin-dot" id="d0"></div><div class="pin-dot" id="d1"></div>
+        <div class="pin-dot" id="d2"></div><div class="pin-dot" id="d3"></div>
+      </div>
+      <div class="pin-pad">
+        <button class="pin-key" onclick="pinPress('1')">1</button>
+        <button class="pin-key" onclick="pinPress('2')">2</button>
+        <button class="pin-key" onclick="pinPress('3')">3</button>
+        <button class="pin-key" onclick="pinPress('4')">4</button>
+        <button class="pin-key" onclick="pinPress('5')">5</button>
+        <button class="pin-key" onclick="pinPress('6')">6</button>
+        <button class="pin-key" onclick="pinPress('7')">7</button>
+        <button class="pin-key" onclick="pinPress('8')">8</button>
+        <button class="pin-key" onclick="pinPress('9')">9</button>
+        <button class="pin-key" style="opacity:0;pointer-events:none"></button>
+        <button class="pin-key" onclick="pinPress('0')">0</button>
+        <button class="pin-key" onclick="pinDel()">⌫</button>
+      </div>
+      <div class="pin-error" id="pinError"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="mainApp" class="screen">
+  <div class="topbar">
+    <div class="topbar-title">📒 <span>Contact</span> Diary</div>
+    <div class="topbar-right">
+      <div class="user-chip"><div class="chip-dot"></div><span id="loggedUserName">User</span></div>
+      <div class="icon-btn" id="adminBtn" onclick="openAdmin()" style="display:none">⚙️</div>
+      <div class="icon-btn" onclick="exportContacts()">⬇️</div>
+      <div class="icon-btn" onclick="lockApp()">🔒</div>
+    </div>
+  </div>
+  <div class="search-wrap">
+    <input class="search-input" placeholder="🔍  Search..." id="searchInput" oninput="renderContacts()">
+  </div>
+  <div class="cat-scroll" id="catScroll">
+    <div class="cat-chip active" onclick="filterCat('')" data-cat="">All</div>
+  </div>
+  <div class="stats-bar" id="statsBar"></div>
+  <div class="contacts-list" id="contactsList">
+    <div class="loading"><div class="spinner"></div>Loading...</div>
+  </div>
+  <button class="fab" id="fabBtn" onclick="openAddForm()">+</button>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div id="adminScreen" class="screen">
+  <div class="admin-topbar">
+    <button class="admin-back" onclick="closeAdmin()">←</button>
+    <div class="admin-title">⚙️ Settings</div>
+  </div>
+  <div class="admin-section">
+
+    <!-- ADMIN PIN -->
+    <div class="admin-section-title">👑 Admin PIN</div>
+    <div class="pin-change-card">
+      <div style="font-size:13px;font-weight:600;margin-bottom:10px;">🔑 Change Admin PIN</div>
+      <div class="pin-change-row">
+        <input class="pin-input-admin" id="newAdminPin" type="password" maxlength="4" placeholder="····" inputmode="numeric">
+        <button class="pin-save-btn" onclick="changeAdminPin()">Save</button>
+      </div>
+    </div>
+
+    <!-- USERS -->
+    <div class="admin-section-title" style="margin-top:20px;">👥 Users <span id="activeCount" style="color:var(--green);font-weight:700;"></span></div>
+    <div id="usersList"></div>
+    <div class="add-card" onclick="openAddUser()">➕ Add New User</div>
+
+    <!-- CATEGORIES -->
+    <div class="admin-section-title" style="margin-top:20px;">🏷️ Categories <span id="catCount" style="color:var(--green);font-weight:700;"></span></div>
+    <div id="catList"></div>
+    <div class="add-card" onclick="openAddCat()">➕ Add New Category</div>
+
+    <!-- CUSTOM FIELDS -->
+    <div class="admin-section-title" style="margin-top:20px;">🔧 Contact Fields <span id="fieldCount" style="color:var(--green);font-weight:700;"></span></div>
+    <div style="font-size:12px;color:var(--text3);margin-bottom:10px;">Contact form-ல என்ன fields வேணும்னு இங்க decide பண்ணுங்க</div>
+    <div id="fieldsList"></div>
+    <div class="add-card" onclick="openAddField()">➕ Add New Field</div>
+
+  </div>
+</div>
+
+<!-- DETAIL MODAL -->
+<div class="modal-overlay" id="detailModal" onclick="closeDetail(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="modal-header">
+      <div class="modal-avatar" id="dAvatar"></div>
+      <div><div class="modal-name" id="dName"></div><span class="modal-cat" id="dCat"></span></div>
+    </div>
+    <div class="modal-note-box" id="dNote" style="display:none"></div>
+    <div class="modal-actions" id="dActions"></div>
+    <div class="detail-rows" id="dRows"></div>
+    <div class="modal-footer-btns">
+      <button class="edit-btn" onclick="editContact()">✏️ Edit</button>
+      <button class="del-btn" onclick="deleteContact()">🗑️</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD/EDIT CONTACT MODAL -->
+<div class="modal-overlay" id="formModal" onclick="closeForm(event)">
+  <div class="modal-sheet">
+    <div class="modal-handle"></div>
+    <div class="form-title" id="formTitle">➕ New Contact</div>
+    <div class="form-body">
+      <input type="hidden" id="fId">
+      <!-- NAME always shown -->
+      <div class="form-group">
+        <label class="form-label">Name *</label>
+        <input class="form-input" id="fName" placeholder="Contact name">
+      </div>
+      <!-- CATEGORY always shown -->
+      <div class="form-group">
+        <label class="form-label">Category</label>
+        <select class="form-select" id="fCat"></select>
+      </div>
+      <!-- DYNAMIC FIELDS rendered here -->
+      <div id="dynamicFields"></div>
+      <button class="save-btn" onclick="saveContact()">💾 Save Contact</button>
+      <button class="cancel-btn" onclick="document.getElementById('formModal').classList.remove('open')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER MODAL -->
+<div class="mini-modal-overlay" id="addUserModal">
+  <div class="mini-modal">
+    <div class="mini-modal-title" id="addUserTitle">➕ Add User</div>
+    <div class="mini-modal-sub">Name and 4-digit PIN</div>
+    <input type="hidden" id="editUserId">
+    <div class="form-group"><label class="form-label">Name</label><input class="form-input" id="newUserName" placeholder="User's name"></div>
+    <div class="form-group" style="margin-top:10px"><label class="form-label">PIN (4 digits)</label>
+      <input class="form-input" id="newUserPin" type="password" maxlength="4" placeholder="····" inputmode="numeric" style="letter-spacing:6px;font-size:22px;text-align:center;"></div>
+    <div class="mini-modal-btns">
+      <button class="mini-btn secondary" onclick="closeAddUser()">Cancel</button>
+      <button class="mini-btn primary" onclick="saveUser()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD CATEGORY MODAL -->
+<div class="mini-modal-overlay" id="addCatModal">
+  <div class="mini-modal">
+    <div class="mini-modal-title" id="addCatTitle">➕ Add Category</div>
+    <div class="mini-modal-sub">Emoji + Category name</div>
+    <input type="hidden" id="editCatId">
+    <div class="form-group"><label class="form-label">Emoji</label><input class="form-input" id="newCatEmoji" placeholder="🏥" maxlength="4" style="font-size:24px;text-align:center;"></div>
+    <div class="form-group" style="margin-top:10px"><label class="form-label">Name</label><input class="form-input" id="newCatName" placeholder="e.g. Doctor"></div>
+    <div class="mini-modal-btns">
+      <button class="mini-btn secondary" onclick="closeAddCat()">Cancel</button>
+      <button class="mini-btn primary" onclick="saveCat()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD FIELD MODAL -->
+<div class="mini-modal-overlay" id="addFieldModal">
+  <div class="mini-modal">
+    <div class="mini-modal-title" id="addFieldTitle">➕ Add Field</div>
+    <div class="mini-modal-sub">Contact form-ல show ஆகும்</div>
+    <input type="hidden" id="editFieldId">
+    <div class="form-group"><label class="form-label">Field Name</label><input class="form-input" id="newFieldName" placeholder="e.g. Phone, Birthday, Shop Name"></div>
+    <div class="form-group" style="margin-top:10px"><label class="form-label">Type</label>
+      <select class="form-select" id="newFieldType">
+        <option value="tel">📞 Phone Number</option>
+        <option value="text">✏️ Text</option>
+        <option value="url">🔗 Link/URL</option>
+        <option value="email">📧 Email</option>
+        <option value="date">📅 Date</option>
+        <option value="textarea">📝 Long Text</option>
+      </select>
+    </div>
+    <div class="form-group" style="margin-top:10px"><label class="form-label">Emoji Icon</label>
+      <input class="form-input" id="newFieldEmoji" placeholder="e.g. 📞" maxlength="4" style="font-size:20px;text-align:center;"></div>
+    <div class="form-group" style="margin-top:10px"><label class="form-label">Placeholder</label>
+      <input class="form-input" id="newFieldPlaceholder" placeholder="e.g. Enter phone number"></div>
+    <div class="mini-modal-btns">
+      <button class="mini-btn secondary" onclick="closeAddField()">Cancel</button>
+      <button class="mini-btn primary" onclick="saveField()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, set, remove, onValue, get, update } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBVGVu59jDZybPFAX_pRisSrQRoXHQ0EWY",
+  authDomain: "kmbsc-chit.firebaseapp.com",
+  databaseURL: "https://kmbsc-chit-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "kmbsc-chit",
+  storageBucket: "kmbsc-chit.firebasestorage.app",
+  messagingSenderId: "511325458985",
+  appId: "1:511325458985:web:a7597bcf0f89b71405c238"
+};
+
+const DEFAULT_ADMIN_PIN = "1234";
+const ADMIN_USER = { id:'__admin__', name:'Ramesh', isAdmin:true };
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+const BASE = "contact_diary";
+const CONTACTS_PATH = `${BASE}/contacts`;
+const USERS_PATH    = `${BASE}/users`;
+const SETTINGS_PATH = `${BASE}/settings`;
+const CATS_PATH     = `${BASE}/categories`;
+const FIELDS_PATH   = `${BASE}/fields`;
+
+let allContacts=[], allUsers=[], allCats=[], allFields=[];
+let adminPin=DEFAULT_ADMIN_PIN;
+let currentContact=null, loggedUser=null, selectedUser=null;
+let currentFilter='', pinBuffer='';
+
+// ── INIT ──
+async function init() {
+  const [settSnap, userSnap, catSnap, fieldSnap] = await Promise.all([
+    get(ref(db, SETTINGS_PATH)),
+    get(ref(db, USERS_PATH)),
+    get(ref(db, CATS_PATH)),
+    get(ref(db, FIELDS_PATH))
+  ]);
+  if (settSnap.exists() && settSnap.val().adminPin) adminPin = settSnap.val().adminPin;
+  allUsers=[];
+  if (userSnap.exists()) userSnap.forEach(c => allUsers.push({id:c.key,...c.val()}));
+  allCats=[];
+  if (catSnap.exists()) catSnap.forEach(c => allCats.push({id:c.key,...c.val()}));
+  allFields=[];
+  if (fieldSnap.exists()) fieldSnap.forEach(c => allFields.push({id:c.key,...c.val()}));
+  renderLoginUsers();
+}
+
+// ── LOGIN ──
+function renderLoginUsers() {
+  let html = `<button class="user-btn" onclick="selectUser('__admin__')">
+    <div class="u-avatar" style="background:#7c6af7;color:white">R</div>
+    <div class="u-info"><div class="u-name">Ramesh</div><div class="u-role">Admin</div></div>
+    <span class="u-badge">👑</span>
+  </button>`;
+  allUsers.filter(u=>u.enabled!==false).forEach(u=>{
+    html+=`<button class="user-btn" onclick="selectUser('${u.id}')">
+      <div class="u-avatar" style="background:${avatarBg(u.name)};color:white">${u.name[0].toUpperCase()}</div>
+      <div class="u-info"><div class="u-name">${u.name}</div><div class="u-role">${u.role||'Member'}</div></div>
+    </button>`;
+  });
+  document.getElementById('userSelectWrap').innerHTML = html;
+  document.getElementById('userSelectWrap').style.display='flex';
+  document.getElementById('pinSection').style.display='none';
+  document.getElementById('loginSub').textContent='Select your profile';
+}
+
+window.selectUser = (id) => {
+  selectedUser = id==='__admin__' ? ADMIN_USER : allUsers.find(u=>u.id===id);
+  if (!selectedUser) return;
+  pinBuffer=''; updateDots();
+  document.getElementById('pinWho').innerHTML=`Logging in as <strong>${selectedUser.name}</strong>`;
+  document.getElementById('userSelectWrap').style.display='none';
+  document.getElementById('pinSection').style.display='block';
+  document.getElementById('loginSub').textContent='Enter your PIN';
+  document.getElementById('pinError').textContent='';
+};
+window.backToUsers = () => {
+  document.getElementById('userSelectWrap').style.display='flex';
+  document.getElementById('pinSection').style.display='none';
+  document.getElementById('loginSub').textContent='Select your profile';
+  selectedUser=null; pinBuffer=''; updateDots();
+};
+window.pinPress = (d) => {
+  if (pinBuffer.length>=4) return;
+  pinBuffer+=d; updateDots();
+  if (pinBuffer.length===4) {
+    setTimeout(()=>{
+      const correct = selectedUser.isAdmin ? adminPin : (selectedUser.pin||'0000');
+      if (pinBuffer===correct) {
+        loggedUser=selectedUser;
+        if (!selectedUser.isAdmin) update(ref(db,`${USERS_PATH}/${selectedUser.id}`),{lastLogin:Date.now()});
+        showMainApp();
+      } else {
+        document.getElementById('pinError').textContent='Wrong PIN. Try again.';
+        pinBuffer=''; updateDots();
+        setTimeout(()=>document.getElementById('pinError').textContent='',1800);
+      }
+    },150);
+  }
+};
+window.pinDel = () => { pinBuffer=pinBuffer.slice(0,-1); updateDots(); };
+function updateDots() {
+  for(let i=0;i<4;i++) document.getElementById('d'+i).classList.toggle('filled',i<pinBuffer.length);
+}
+
+function showMainApp() {
+  showScreen('mainApp');
+  document.getElementById('loggedUserName').textContent=loggedUser.name;
+  document.getElementById('adminBtn').style.display=loggedUser.isAdmin?'flex':'none';
+  document.getElementById('fabBtn').classList.add('visible');
+  renderCatScroll();
+  loadContacts();
+}
+window.lockApp = () => {
+  loggedUser=null; selectedUser=null; pinBuffer=''; updateDots();
+  document.getElementById('fabBtn').classList.remove('visible');
+  document.getElementById('pinSection').style.display='none';
+  renderLoginUsers();
+  showScreen('loginScreen');
+};
+
+// ── CONTACTS ──
+function loadContacts() {
+  onValue(ref(db,CONTACTS_PATH), snap=>{
+    allContacts=[];
+    if(snap.exists()) snap.forEach(c=>allContacts.push({id:c.key,...c.val()}));
+    allContacts.sort((a,b)=>a.name.localeCompare(b.name));
+    renderContacts();
+  });
+}
+window.renderContacts = () => {
+  const q=document.getElementById('searchInput').value.trim().toLowerCase();
+  let list=allContacts;
+  if(currentFilter) list=list.filter(c=>c.category===currentFilter);
+  if(q) list=list.filter(c=>
+    c.name.toLowerCase().includes(q)||
+    Object.values(c.fields||{}).some(v=>String(v).toLowerCase().includes(q))||
+    (c.category||'').toLowerCase().includes(q)
+  );
+  document.getElementById('statsBar').textContent=`${list.length} contact${list.length!==1?'s':''}`;
+  const container=document.getElementById('contactsList');
+  if(!list.length){
+    container.innerHTML=`<div class="empty-state"><div class="empty-icon">📭</div><div class="empty-text">No contacts found</div><div class="empty-sub">Tap + to add</div></div>`;
+    return;
+  }
+  const groups={};
+  list.forEach(c=>{const l=c.name[0].toUpperCase();if(!groups[l])groups[l]=[];groups[l].push(c);});
+  let html='';
+  Object.keys(groups).sort().forEach(l=>{
+    html+=`<div class="section-label">${l}</div>`;
+    groups[l].forEach(c=>{
+      // Find phone field for preview
+      const phoneField = allFields.find(f=>f.type==='tel');
+      const phoneVal = phoneField ? (c.fields||{})[phoneField.id]||'' : '';
+      html+=`<div class="contact-card" onclick="showDetail('${c.id}')">
+        <div class="contact-avatar" style="background:${avatarBg(c.name)};color:white">${c.name[0].toUpperCase()}</div>
+        <div class="contact-info">
+          <div class="contact-name">${c.name}</div>
+          <div class="contact-meta">${c.category||''}${phoneVal?' · '+phoneVal:''}</div>
+        </div>
+        <div class="contact-badges">
+          ${phoneVal?'<div class="badge">📞</div>':''}
+        </div>
+      </div>`;
+    });
+  });
+  container.innerHTML=html;
+};
+
+window.filterCat = (cat) => {
+  currentFilter=cat;
+  document.querySelectorAll('.cat-chip').forEach(el=>el.classList.toggle('active',el.dataset.cat===cat));
+  renderContacts();
+};
+function renderCatScroll() {
+  let html='<div class="cat-chip active" onclick="filterCat(\'\')" data-cat="">All</div>';
+  allCats.forEach(c=>{
+    html+=`<div class="cat-chip" onclick="filterCat('${c.name}')" data-cat="${c.name}">${c.emoji} ${c.name}</div>`;
+  });
+  document.getElementById('catScroll').innerHTML=html;
+}
+
+// ── DETAIL ──
+window.showDetail = (id) => {
+  currentContact=allContacts.find(c=>c.id===id);
+  if(!currentContact) return;
+  const c=currentContact;
+  document.getElementById('dAvatar').textContent=c.name[0].toUpperCase();
+  document.getElementById('dAvatar').style.cssText=`background:${avatarBg(c.name)};color:white`;
+  document.getElementById('dName').textContent=c.name;
+  const catEl=document.getElementById('dCat');
+  catEl.textContent=c.category||'';
+  catEl.style.cssText=`background:${catColor(c.category)}22;color:${catColor(c.category)}`;
+
+  // Quick action buttons — find phone/whatsapp/location fields
+  let actions='';
+  const fields=c.fields||{};
+  allFields.forEach(f=>{
+    const val=fields[f.id];
+    if(!val) return;
+    if(f.type==='tel' && f.name.toLowerCase().includes('phone')){
+      actions+=`<a href="tel:${val}" class="action-btn call"><span class="action-icon">📞</span>Call</a>`;
+      actions+=`<a href="https://wa.me/91${val.replace(/\D/g,'')}" target="_blank" class="action-btn whatsapp"><span class="action-icon">💬</span>WhatsApp</a>`;
+    }
+    if(f.type==='url' && f.name.toLowerCase().includes('location')){
+      actions+=`<a href="${val}" target="_blank" class="action-btn location"><span class="action-icon">📍</span>Location</a>`;
+    }
+  });
+  actions+=`<div class="action-btn share-btn" onclick="shareContact()"><span class="action-icon">📤</span>Share</div>`;
+  document.getElementById('dActions').innerHTML=actions;
+
+  // Detail rows
+  let rows='';
+  allFields.forEach(f=>{
+    const val=fields[f.id];
+    if(!val) return;
+    let href=null;
+    if(f.type==='tel') href=`tel:${val}`;
+    else if(f.type==='email') href=`mailto:${val}`;
+    else if(f.type==='url') href=val;
+    if(f.type==='textarea'){
+      // Long text — show full, no truncate
+      rows+=`<div class="detail-row">
+        <div class="detail-row-icon">${f.emoji||'📌'}</div>
+        <div class="detail-row-content">
+          <div class="detail-row-label">${f.name}</div>
+          <div class="detail-row-value" style="white-space:pre-wrap;overflow:visible;">${val}</div>
+        </div>
+      </div>`;
+    } else {
+      rows+=detailRow(f.emoji||'📌',f.name,val,href);
+    }
+  });
+  // Note
+  if(c.note){
+    rows+=`<div class="detail-row"><div class="detail-row-icon">📝</div>
+      <div class="detail-row-content"><div class="detail-row-label">Notes</div>
+      <div class="detail-row-value" style="white-space:normal">${c.note}</div></div></div>`;
+  }
+  document.getElementById('dRows').innerHTML=rows;
+  const noteEl=document.getElementById('dNote');
+  noteEl.style.display='none';
+  document.getElementById('detailModal').classList.add('open');
+};
+function detailRow(icon,label,value,href){
+  const inner=`<div class="detail-row-icon">${icon}</div>
+    <div class="detail-row-content"><div class="detail-row-label">${label}</div><div class="detail-row-value">${value}</div></div>
+    ${href?'<div class="detail-row-action">›</div>':''}`;
+  return href?`<a href="${href}" target="_blank" class="detail-row">${inner}</a>`:`<div class="detail-row">${inner}</div>`;
+}
+window.closeDetail=(e)=>{if(e.target===document.getElementById('detailModal'))document.getElementById('detailModal').classList.remove('open');};
+
+// ── SHARE ──
+window.shareContact=()=>{
+  const c=currentContact;
+  let text=`📒 *${c.name}*\n${c.category?c.category+'\n':''}\n`;
+  allFields.forEach(f=>{
+    const val=(c.fields||{})[f.id];
+    if(val) text+=`${f.emoji||'•'} ${f.name}: ${val}\n`;
+  });
+  if(c.note) text+=`\n📝 ${c.note}`;
+  if(navigator.share) navigator.share({title:c.name,text});
+  else navigator.clipboard.writeText(text).then(()=>showToast('✅ Copied!'));
+};
+
+// ── FORM ──
+function renderDynamicFields(existingData={}) {
+  const container=document.getElementById('dynamicFields');
+  if(!allFields.length){
+    container.innerHTML=`<div style="color:var(--text3);font-size:13px;text-align:center;padding:20px 0;">⚙️ Admin panel-ல Fields add பண்ணுங்க</div>`;
+    return;
+  }
+  let html='';
+  allFields.forEach(f=>{
+    const val=existingData[f.id]||'';
+    if(f.type==='textarea'){
+      html+=`<div class="form-group"><label class="form-label">${f.emoji||''} ${f.name}</label>
+        <textarea class="form-input" id="field_${f.id}" placeholder="${f.placeholder||''}">${val}</textarea></div>`;
+    } else {
+      html+=`<div class="form-group"><label class="form-label">${f.emoji||''} ${f.name}</label>
+        <input class="form-input" type="${f.type}" id="field_${f.id}" placeholder="${f.placeholder||''}" value="${val}"></div>`;
+    }
+  });
+  container.innerHTML=html;
+}
+
+function populateCatSelect(current=''){
+  const sel=document.getElementById('fCat');
+  if(!allCats.length){
+    sel.innerHTML='<option value="">-- Add categories in Admin --</option>';
+    return;
+  }
+  sel.innerHTML=allCats.map(c=>`<option value="${c.name}" ${c.name===current?'selected':''}>${c.emoji} ${c.name}</option>`).join('');
+}
+
+window.openAddForm=()=>{
+  document.getElementById('formTitle').textContent='➕ New Contact';
+  document.getElementById('fId').value='';
+  document.getElementById('fName').value='';
+  populateCatSelect();
+  renderDynamicFields();
+  document.getElementById('formModal').classList.add('open');
+};
+window.editContact=()=>{
+  const c=currentContact;
+  document.getElementById('formTitle').textContent='✏️ Edit Contact';
+  document.getElementById('fId').value=c.id;
+  document.getElementById('fName').value=c.name||'';
+  populateCatSelect(c.category);
+  renderDynamicFields(c.fields||{});
+  document.getElementById('detailModal').classList.remove('open');
+  document.getElementById('formModal').classList.add('open');
+};
+window.closeForm=(e)=>{if(e.target===document.getElementById('formModal'))document.getElementById('formModal').classList.remove('open');};
+
+window.saveContact=async()=>{
+  const name=document.getElementById('fName').value.trim();
+  if(!name){showToast('⚠️ Name required');return;}
+  const fields={};
+  allFields.forEach(f=>{
+    const el=document.getElementById('field_'+f.id);
+    if(el) fields[f.id]=el.value.trim();
+  });
+  const data={
+    name,
+    category:document.getElementById('fCat').value,
+    fields,
+    updatedAt:Date.now(),
+    updatedBy:loggedUser.name
+  };
+  const id=document.getElementById('fId').value;
+  if(id){await set(ref(db,`${CONTACTS_PATH}/${id}`),data);showToast('✅ Updated!');}
+  else{data.createdAt=Date.now();await push(ref(db,CONTACTS_PATH),data);showToast('✅ Saved!');}
+  document.getElementById('formModal').classList.remove('open');
+};
+window.deleteContact=async()=>{
+  if(!currentContact||!confirm(`Delete "${currentContact.name}"?`))return;
+  await remove(ref(db,`${CONTACTS_PATH}/${currentContact.id}`));
+  document.getElementById('detailModal').classList.remove('open');
+  showToast('🗑️ Deleted');
+};
+
+// ── EXPORT ──
+window.exportContacts=()=>{
+  if(!allContacts.length){showToast('No contacts');return;}
+  const headers=['Name','Category',...allFields.map(f=>f.name)];
+  let csv=headers.join(',')+'\n';
+  allContacts.forEach(c=>{
+    const row=[c.name,c.category||'',...allFields.map(f=>(c.fields||{})[f.id]||'')];
+    csv+=row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')+'\n';
+  });
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));
+  a.download='contacts_diary.csv';a.click();
+  showToast('📥 Exported!');
+};
+
+// ══════════════════════════════════════════
+// ADMIN
+// ══════════════════════════════════════════
+window.openAdmin=()=>{
+  if(!loggedUser?.isAdmin){showToast('Admin only');return;}
+  renderAdminUsers();
+  renderAdminCats();
+  renderAdminFields();
+  showScreen('adminScreen');
+};
+window.closeAdmin=()=>showScreen('mainApp');
+
+// Admin PIN
+window.changeAdminPin=async()=>{
+  const p=document.getElementById('newAdminPin').value.trim();
+  if(p.length!==4||!/^\d{4}$/.test(p)){showToast('⚠️ 4 digits');return;}
+  await set(ref(db,`${SETTINGS_PATH}/adminPin`),p);
+  adminPin=p;
+  document.getElementById('newAdminPin').value='';
+  showToast('✅ Admin PIN changed!');
+};
+
+// ── USERS ──
+function renderAdminUsers(){
+  const active=allUsers.filter(u=>u.enabled!==false).length;
+  document.getElementById('activeCount').textContent=`${active} active`;
+  let html='';
+  allUsers.forEach(u=>{
+    const on=u.enabled!==false;
+    const last=u.lastLogin?new Date(u.lastLogin).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Never';
+    html+=`<div class="user-row">
+      <div class="status-dot ${on?'on':'off'}"></div>
+      <div class="user-row-avatar" style="background:${avatarBg(u.name)};color:white">${u.name[0].toUpperCase()}</div>
+      <div class="user-row-info">
+        <div class="user-row-name">${u.name} ${!on?'<span style="font-size:10px;color:var(--red);background:var(--red)22;padding:1px 6px;border-radius:5px;margin-left:4px">Off</span>':''}</div>
+        <div class="user-row-meta">Last: ${last}</div>
+      </div>
+      <div class="user-row-actions">
+        <button class="u-action-btn" onclick="openEditUser('${u.id}')">✏️</button>
+        <button class="u-action-btn" onclick="resetUserPin('${u.id}')">🔑</button>
+        <button class="u-action-btn" onclick="toggleUser('${u.id}',${on})">${on?'🚫':'✅'}</button>
+        <button class="u-action-btn danger" onclick="removeUser('${u.id}')">🗑️</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('usersList').innerHTML=html||'<div style="color:var(--text3);font-size:13px;padding:8px 0;">No users yet.</div>';
+}
+window.openAddUser=()=>{
+  document.getElementById('addUserTitle').textContent='➕ Add User';
+  document.getElementById('editUserId').value='';
+  document.getElementById('newUserName').value='';
+  document.getElementById('newUserPin').value='';
+  document.getElementById('addUserModal').classList.add('open');
+};
+window.openEditUser=(id)=>{
+  const u=allUsers.find(x=>x.id===id);if(!u)return;
+  document.getElementById('addUserTitle').textContent='✏️ Edit User';
+  document.getElementById('editUserId').value=id;
+  document.getElementById('newUserName').value=u.name||'';
+  document.getElementById('newUserPin').value='';
+  document.getElementById('addUserModal').classList.add('open');
+};
+window.closeAddUser=()=>document.getElementById('addUserModal').classList.remove('open');
+window.saveUser=async()=>{
+  const name=document.getElementById('newUserName').value.trim();
+  const pin=document.getElementById('newUserPin').value.trim();
+  const id=document.getElementById('editUserId').value;
+  if(!name){showToast('⚠️ Name required');return;}
+  if(!id&&(pin.length!==4||!/^\d{4}$/.test(pin))){showToast('⚠️ 4-digit PIN required');return;}
+  if(id){
+    const upd={name};if(pin.length===4)upd.pin=pin;
+    await update(ref(db,`${USERS_PATH}/${id}`),upd);
+    allUsers=allUsers.map(u=>u.id===id?{...u,...upd}:u);
+  } else {
+    const r=await push(ref(db,USERS_PATH),{name,pin,enabled:true,createdAt:Date.now()});
+    allUsers.push({id:r.key,name,pin,enabled:true});
+  }
+  closeAddUser();renderAdminUsers();showToast('✅ User saved!');
+};
+window.resetUserPin=async(id)=>{
+  const p=prompt('New 4-digit PIN:');
+  if(!p||p.length!==4||!/^\d{4}$/.test(p)){showToast('⚠️ Invalid PIN');return;}
+  await update(ref(db,`${USERS_PATH}/${id}`),{pin:p});
+  allUsers=allUsers.map(u=>u.id===id?{...u,pin:p}:u);
+  showToast('🔑 PIN reset!');
+};
+window.toggleUser=async(id,on)=>{
+  await update(ref(db,`${USERS_PATH}/${id}`),{enabled:!on});
+  allUsers=allUsers.map(u=>u.id===id?{...u,enabled:!on}:u);
+  renderAdminUsers();showToast(on?'🚫 Disabled':'✅ Enabled');
+};
+window.removeUser=async(id)=>{
+  const u=allUsers.find(x=>x.id===id);
+  if(!confirm(`Remove "${u?.name}"?`))return;
+  await remove(ref(db,`${USERS_PATH}/${id}`));
+  allUsers=allUsers.filter(x=>x.id!==id);
+  renderAdminUsers();showToast('🗑️ Removed');
+};
+
+// ── CATEGORIES ──
+function renderAdminCats(){
+  document.getElementById('catCount').textContent=`${allCats.length} total`;
+  let html='';
+  allCats.forEach(c=>{
+    html+=`<div class="user-row">
+      <div style="font-size:22px">${c.emoji}</div>
+      <div class="user-row-info"><div class="user-row-name">${c.name}</div></div>
+      <div class="user-row-actions">
+        <button class="u-action-btn" onclick="openEditCat('${c.id}')">✏️</button>
+        <button class="u-action-btn danger" onclick="removeCat('${c.id}','${c.name}')">🗑️</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('catList').innerHTML=html||'<div style="color:var(--text3);font-size:13px;padding:8px 0;">No categories.</div>';
+}
+window.openAddCat=()=>{
+  document.getElementById('addCatTitle').textContent='➕ Add Category';
+  document.getElementById('editCatId').value='';
+  document.getElementById('newCatEmoji').value='';
+  document.getElementById('newCatName').value='';
+  document.getElementById('addCatModal').classList.add('open');
+};
+window.openEditCat=(id)=>{
+  const c=allCats.find(x=>x.id===id);if(!c)return;
+  document.getElementById('addCatTitle').textContent='✏️ Edit Category';
+  document.getElementById('editCatId').value=id;
+  document.getElementById('newCatEmoji').value=c.emoji;
+  document.getElementById('newCatName').value=c.name;
+  document.getElementById('addCatModal').classList.add('open');
+};
+window.closeAddCat=()=>document.getElementById('addCatModal').classList.remove('open');
+window.saveCat=async()=>{
+  const emoji=document.getElementById('newCatEmoji').value.trim()||'📌';
+  const name=document.getElementById('newCatName').value.trim();
+  const id=document.getElementById('editCatId').value;
+  if(!name){showToast('⚠️ Name required');return;}
+  if(id){
+    await set(ref(db,`${CATS_PATH}/${id}`),{emoji,name});
+    allCats=allCats.map(c=>c.id===id?{...c,emoji,name}:c);
+  } else {
+    const r=await push(ref(db,CATS_PATH),{emoji,name});
+    allCats.push({id:r.key,emoji,name});
+  }
+  closeAddCat();renderAdminCats();renderCatScroll();showToast('✅ Category saved!');
+};
+window.removeCat=async(id,name)=>{
+  if(!confirm(`Delete "${name}"?`))return;
+  await remove(ref(db,`${CATS_PATH}/${id}`));
+  allCats=allCats.filter(x=>x.id!==id);
+  renderAdminCats();renderCatScroll();showToast('🗑️ Deleted');
+};
+
+// ── CUSTOM FIELDS ──
+function renderAdminFields(){
+  document.getElementById('fieldCount').textContent=`${allFields.length} total`;
+  let html='';
+  allFields.forEach((f,i)=>{
+    html+=`<div class="user-row">
+      <div style="font-size:20px">${f.emoji||'📌'}</div>
+      <div class="user-row-info">
+        <div class="user-row-name">${f.name}</div>
+        <div class="user-row-meta">${f.type}${f.placeholder?' · '+f.placeholder:''}</div>
+      </div>
+      <div class="user-row-actions">
+        <button class="u-action-btn" onclick="moveField('${f.id}',-1)" ${i===0?'disabled':''}>↑</button>
+        <button class="u-action-btn" onclick="moveField('${f.id}',1)" ${i===allFields.length-1?'disabled':''}>↓</button>
+        <button class="u-action-btn" onclick="openEditField('${f.id}')">✏️</button>
+        <button class="u-action-btn danger" onclick="removeField('${f.id}','${f.name}')">🗑️</button>
+      </div>
+    </div>`;
+  });
+  document.getElementById('fieldsList').innerHTML=html||'<div style="color:var(--text3);font-size:13px;padding:8px 0;">No fields yet. Add below.</div>';
+}
+window.openAddField=()=>{
+  document.getElementById('addFieldTitle').textContent='➕ Add Field';
+  document.getElementById('editFieldId').value='';
+  document.getElementById('newFieldName').value='';
+  document.getElementById('newFieldType').value='text';
+  document.getElementById('newFieldEmoji').value='';
+  document.getElementById('newFieldPlaceholder').value='';
+  document.getElementById('addFieldModal').classList.add('open');
+};
+window.openEditField=(id)=>{
+  const f=allFields.find(x=>x.id===id);if(!f)return;
+  document.getElementById('addFieldTitle').textContent='✏️ Edit Field';
+  document.getElementById('editFieldId').value=id;
+  document.getElementById('newFieldName').value=f.name;
+  document.getElementById('newFieldType').value=f.type;
+  document.getElementById('newFieldEmoji').value=f.emoji||'';
+  document.getElementById('newFieldPlaceholder').value=f.placeholder||'';
+  document.getElementById('addFieldModal').classList.add('open');
+};
+window.closeAddField=()=>document.getElementById('addFieldModal').classList.remove('open');
+window.saveField=async()=>{
+  const name=document.getElementById('newFieldName').value.trim();
+  const type=document.getElementById('newFieldType').value;
+  const emoji=document.getElementById('newFieldEmoji').value.trim()||'📌';
+  const placeholder=document.getElementById('newFieldPlaceholder').value.trim();
+  const id=document.getElementById('editFieldId').value;
+  if(!name){showToast('⚠️ Name required');return;}
+  const order=id?(allFields.find(x=>x.id===id)?.order||0):allFields.length;
+  const data={name,type,emoji,placeholder,order};
+  if(id){
+    await set(ref(db,`${FIELDS_PATH}/${id}`),data);
+    allFields=allFields.map(f=>f.id===id?{...f,...data}:f);
+  } else {
+    const r=await push(ref(db,FIELDS_PATH),data);
+    allFields.push({id:r.key,...data});
+  }
+  closeAddField();renderAdminFields();showToast('✅ Field saved!');
+};
+window.removeField=async(id,name)=>{
+  if(!confirm(`Delete "${name}" field?`))return;
+  await remove(ref(db,`${FIELDS_PATH}/${id}`));
+  allFields=allFields.filter(x=>x.id!==id);
+  renderAdminFields();showToast('🗑️ Deleted');
+};
+window.moveField=async(id,dir)=>{
+  const i=allFields.findIndex(x=>x.id===id);
+  const j=i+dir;
+  if(j<0||j>=allFields.length)return;
+  [allFields[i],allFields[j]]=[allFields[j],allFields[i]];
+  // Save new order
+  for(let k=0;k<allFields.length;k++){
+    await update(ref(db,`${FIELDS_PATH}/${allFields[k].id}`),{order:k});
+    allFields[k].order=k;
+  }
+  renderAdminFields();
+};
+
+// ── HELPERS ──
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function avatarBg(name){
+  const colors=['#7c6af7','#f472b6','#34d399','#60a5fa','#fbbf24','#f87171','#a78bfa','#fb923c'];
+  let h=0;for(let c of name)h=(h*31+c.charCodeAt(0))&0xffffffff;
+  return colors[Math.abs(h)%colors.length];
+}
+function catColor(cat){
+  const c=allCats.find(x=>x.name===cat);
+  const colors=['#34d399','#60a5fa','#fbbf24','#f472b6','#f87171','#a78bfa','#fb923c','#9090a8'];
+  if(!c)return '#9090a8';
+  let h=0;for(let ch of cat)h=(h*31+ch.charCodeAt(0))&0xffffffff;
+  return colors[Math.abs(h)%colors.length];
+}
+window.showToast=(msg)=>{
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2500);
+};
+
+init();
+</script>
+</body>
+</html>
