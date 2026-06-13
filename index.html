@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Contact Diary</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#080e1a;--sur:#0f1928;--sur2:#162035;--bdr:#1e3050;
+  --acc:#0ea5e9;--tea:#14b8a6;--txt:#e8f4fd;--tx2:#7ea8c9;--tx3:#3d6080;
+  --grn:#2dd4bf;--red:#f87171;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;}
+.hide{display:none!important;}
+/* SCREENS */
+#loginScreen{min-height:100vh;display:none;align-items:center;justify-content:center;padding:20px;}
+#loginScreen.active{display:flex;}
+#mainApp,#adminScreen{height:100vh;display:none;flex-direction:column;}
+#mainApp.active,#adminScreen.active{display:flex;}
+/* LOGIN */
+.lcard{background:var(--sur);border:1px solid var(--bdr);border-radius:20px;padding:32px 24px;width:100%;max-width:340px;text-align:center;}
+.lic{font-size:42px;margin-bottom:10px;}
+.ltit{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:4px;}
+.lsub{color:var(--tx2);font-size:13px;margin-bottom:14px;}
+.ulist{display:flex;flex-direction:column;gap:8px;text-align:left;}
+.ubtn{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:10px 13px;border-radius:11px;cursor:pointer;display:flex;align-items:center;gap:9px;font-size:14px;font-family:'Inter',sans-serif;width:100%;}
+.ubtn:active{border-color:var(--acc);}
+.uav{width:33px;height:33px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:14px;font-weight:700;font-family:'Space Grotesk',sans-serif;flex-shrink:0;}
+.unm{font-weight:600;font-size:14px;}
+.url2{font-size:11px;color:var(--tx3);}
+.ubdg{font-size:10px;padding:2px 7px;border-radius:6px;background:linear-gradient(135deg,var(--acc),var(--tea));color:#fff;}
+.pinw{display:none;text-align:left;}
+.pbk{background:none;border:none;color:var(--tx3);font-size:13px;cursor:pointer;margin-bottom:10px;font-family:'Inter',sans-serif;}
+.pwho{font-size:13px;color:var(--tx2);margin-bottom:14px;text-align:center;}
+.pwho strong{color:var(--txt);}
+.pdots{display:flex;justify-content:center;gap:11px;margin-bottom:18px;}
+.pd{width:12px;height:12px;border-radius:50%;border:2px solid var(--bdr);transition:all .2s;}
+.pd.on{background:var(--acc);border-color:var(--acc);}
+.ppad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:0 auto;}
+.pkey{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);font-size:20px;font-weight:600;padding:14px;border-radius:11px;cursor:pointer;font-family:'Space Grotesk',sans-serif;}
+.pkey:active{background:var(--acc);border-color:var(--acc);}
+.perr{color:var(--red);font-size:12px;margin-top:9px;min-height:16px;text-align:center;}
+/* TOPBAR */
+.topbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;}
+.tbtit{font-family:'Space Grotesk',sans-serif;font-size:13px;font-weight:700;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.tbtit span{background:linear-gradient(135deg,var(--acc),var(--tea));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+.tbr{display:flex;gap:5px;align-items:center;flex-shrink:0;}
+.chip{background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;padding:3px 7px;font-size:10px;display:flex;align-items:center;gap:4px;white-space:nowrap;}
+.cdot{width:6px;height:6px;border-radius:50%;background:var(--grn);flex-shrink:0;}
+.ib{background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);width:27px;height:27px;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:13px;flex-shrink:0;}
+.ib:active{border-color:var(--acc);}
+/* SEARCH */
+.sw{padding:10px 14px;background:var(--sur);border-bottom:1px solid var(--bdr);flex-shrink:0;}
+.si{width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 12px;border-radius:10px;font-size:13px;outline:none;font-family:'Inter',sans-serif;}
+.si:focus{border-color:var(--acc);}
+.si::placeholder{color:var(--tx3);}
+/* CAT BAR */
+.cbar{display:flex;gap:7px;padding:9px 14px;overflow-x:auto;scrollbar-width:none;flex-shrink:0;}
+.cbar::-webkit-scrollbar{display:none;}
+.cchip{background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);padding:4px 10px;border-radius:20px;font-size:11px;font-weight:500;cursor:pointer;white-space:nowrap;}
+.cchip.on{background:linear-gradient(135deg,var(--acc),var(--tea));border-color:transparent;color:#fff;}
+.stats{padding:2px 14px 4px;font-size:11px;color:var(--tx3);flex-shrink:0;}
+/* LIST */
+.mbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;overflow-x:hidden;}
+.clist{padding:0 10px 14px;}
+.slbl{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;padding:12px 0 6px;}
+.ccard{background:var(--sur);border:1px solid var(--bdr);border-radius:11px;padding:9px 10px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:9px;width:100%;overflow:hidden;}
+.ccard:active{border-color:var(--acc);}
+.cav{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;font-family:'Space Grotesk',sans-serif;flex-shrink:0;}
+.ci{flex:1;min-width:0;overflow:hidden;}
+.cn{font-weight:600;font-size:12px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.cm{font-size:10px;color:var(--tx2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
+.cbdg{width:30px;height:30px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:14px;background:rgba(45,212,191,.12);border:1px solid rgba(45,212,191,.25);text-decoration:none;flex-shrink:0;}
+/* FAB */
+.fab{position:fixed;bottom:20px;right:16px;width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--acc),var(--tea));color:#fff;border:none;font-size:26px;cursor:pointer;box-shadow:0 4px 20px rgba(14,165,233,.4);display:flex;align-items:center;justify-content:center;z-index:150;}
+.fab:active{transform:scale(.93);}
+/* OVERLAY */
+.ov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center;}
+.ov.on{display:flex;}
+.sheet{background:var(--sur);border-radius:20px 20px 0 0;width:100%;max-width:480px;max-height:90vh;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:28px;animation:up .22s ease;}
+@keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.hndl{width:32px;height:4px;background:var(--bdr);border-radius:2px;margin:10px auto 0;}
+/* DETAIL */
+.dhead{padding:16px 16px 0;display:flex;align-items:center;gap:12px;}
+.dav{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;font-family:'Space Grotesk',sans-serif;}
+.dnm{font-family:'Space Grotesk',sans-serif;font-size:20px;font-weight:700;margin-bottom:2px;}
+.dcat{font-size:12px;padding:2px 8px;border-radius:8px;display:inline-block;font-weight:500;}
+.dacts{display:flex;gap:7px;padding:12px 16px;flex-wrap:wrap;}
+.abt{flex:1;min-width:68px;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 5px;border-radius:10px;font-size:11px;font-weight:500;cursor:pointer;text-decoration:none;display:flex;flex-direction:column;align-items:center;gap:3px;}
+.abt .ai{font-size:18px;}
+.abt:active{transform:scale(.95);}
+.abt.call{border-color:var(--grn);color:var(--grn);}
+.abt.wa{border-color:#25d366;color:#25d366;}
+.abt.sh{border-color:#38bdf8;color:#38bdf8;}
+.drows{padding:0 16px;}
+.drow{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bdr);text-decoration:none;color:var(--txt);}
+.drow:last-child{border-bottom:none;}
+.dic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0;background:rgba(14,165,233,.08);}
+.dct{flex:1;min-width:0;}
+.dl{font-size:11px;color:var(--tx3);margin-bottom:1px;}
+.dv{font-size:14px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.dv.ml{white-space:pre-wrap;overflow:visible;text-overflow:unset;}
+.darr{font-size:17px;color:var(--tx3);}
+.dfoot{display:flex;gap:8px;padding:12px 16px 0;}
+.ebtn{flex:1;background:linear-gradient(135deg,var(--acc),var(--tea));color:#fff;border:none;padding:12px;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+.dbtn{background:var(--sur2);border:1px solid var(--red);color:var(--red);padding:12px 15px;border-radius:11px;font-size:14px;cursor:pointer;font-family:'Inter',sans-serif;}
+/* FORM */
+.ftit{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;padding:16px 16px 12px;border-bottom:1px solid var(--bdr);}
+.fbdy{padding:12px 16px;}
+.fg{margin-bottom:12px;}
+.fl{font-size:11px;color:#38bdf8;margin-bottom:4px;font-weight:600;text-transform:uppercase;letter-spacing:.7px;display:block;}
+.fi{width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:9px 12px;border-radius:9px;font-size:14px;outline:none;font-family:'Inter',sans-serif;}
+.fi:focus{border-color:var(--acc);}
+.fi::placeholder{color:var(--tx3);}
+.fsel{width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:9px 12px;border-radius:9px;font-size:14px;outline:none;font-family:'Inter',sans-serif;appearance:none;}
+textarea.fi{resize:vertical;min-height:60px;}
+.sbtn{width:100%;background:linear-gradient(135deg,var(--acc),var(--tea));color:#fff;border:none;padding:12px;border-radius:11px;font-size:14px;font-weight:600;cursor:pointer;margin-top:4px;font-family:'Inter',sans-serif;}
+.cbtn{width:100%;background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);padding:10px;border-radius:11px;font-size:13px;cursor:pointer;margin-top:6px;font-family:'Inter',sans-serif;}
+/* MINI OV */
+.mov{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:300;align-items:center;justify-content:center;padding:20px;}
+.mov.on{display:flex;}
+.mbox{background:var(--sur);border:1px solid var(--bdr);border-radius:16px;padding:22px;width:100%;max-width:310px;}
+.mtit{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;margin-bottom:5px;}
+.msub{font-size:13px;color:var(--tx2);margin-bottom:16px;}
+.mbtns{display:flex;gap:8px;margin-top:14px;}
+.mb{flex:1;padding:10px;border-radius:9px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Inter',sans-serif;}
+.mb.p{background:linear-gradient(135deg,var(--acc),var(--tea));color:#fff;}
+.mb.s{background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);}
+/* ADMIN */
+.atbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:12px 14px;display:flex;align-items:center;gap:9px;flex-shrink:0;}
+.abk{background:none;border:none;color:var(--tx2);cursor:pointer;font-size:18px;padding:3px;}
+.atit{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;}
+.abdy{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;padding-bottom:80px;}
+.asec{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:18px;}
+.asec:first-child{margin-top:0;}
+.row{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
+.rav{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:700;font-family:'Space Grotesk',sans-serif;flex-shrink:0;}
+.ri{flex:1;min-width:0;}
+.rn{font-weight:600;font-size:14px;margin-bottom:1px;}
+.rm{font-size:11px;color:var(--tx3);}
+.racts{display:flex;gap:5px;flex-wrap:wrap;}
+.rb{background:var(--sur2);border:1px solid var(--bdr);color:var(--tx2);padding:6px 8px;border-radius:7px;font-size:12px;cursor:pointer;font-family:'Inter',sans-serif;}
+.rb:active{border-color:var(--acc);color:var(--acc);}
+.rb.d{border-color:var(--red);color:var(--red);}
+.sdot{width:7px;height:7px;border-radius:50%;flex-shrink:0;}
+.sdot.on{background:var(--grn);}
+.sdot.off{background:var(--tx3);}
+.addrow{background:var(--sur);border:1px dashed var(--acc);border-radius:12px;padding:13px;text-align:center;cursor:pointer;color:#38bdf8;font-size:13px;font-weight:500;margin-bottom:8px;}
+.pcard{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:13px;margin-bottom:8px;}
+.pinrow{display:flex;gap:8px;align-items:center;}
+.pinfi{flex:1;background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 11px;border-radius:8px;font-size:16px;outline:none;font-family:'Space Grotesk',sans-serif;letter-spacing:4px;}
+.pinfi:focus{border-color:var(--acc);}
+.pinsv{background:linear-gradient(135deg,var(--acc),var(--tea));color:#fff;border:none;padding:8px 13px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;font-family:'Inter',sans-serif;}
+/* MISC */
+.empty{text-align:center;padding:50px 20px;color:var(--tx3);}
+.eic{font-size:40px;margin-bottom:10px;}
+.et{font-size:14px;margin-bottom:4px;color:var(--tx2);}
+.loading{text-align:center;padding:36px;color:var(--tx3);font-size:13px;}
+.spin{width:20px;height:20px;border:2px solid var(--bdr);border-top-color:var(--acc);border-radius:50%;animation:spin .7s linear infinite;margin:0 auto 10px;}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes livepulse{0%,100%{opacity:1}50%{opacity:0.4}}
+.toast{position:fixed;bottom:80px;left:50%;transform:translateX(-50%) translateY(18px);background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);padding:8px 16px;border-radius:16px;font-size:13px;opacity:0;transition:all .3s;z-index:500;white-space:nowrap;}
+.toast.on{opacity:1;transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="loginScreen" class="screen">
+  <div class="lcard">
+    <div class="lic">📒</div>
+    <div class="ltit">Contact Diary</div>
+    <div class="lsub" id="lsub">Select your profile</div>
+    <div id="ulist" class="ulist"></div>
+    <div id="pinw" class="pinw">
+      <button class="pbk" onclick="backToUsers()">← Back</button>
+      <div class="pwho" id="pwho"></div>
+      <div class="pdots">
+        <div class="pd" id="pd0"></div><div class="pd" id="pd1"></div>
+        <div class="pd" id="pd2"></div><div class="pd" id="pd3"></div>
+      </div>
+      <div class="ppad">
+        <button class="pkey" onclick="pp('1')">1</button>
+        <button class="pkey" onclick="pp('2')">2</button>
+        <button class="pkey" onclick="pp('3')">3</button>
+        <button class="pkey" onclick="pp('4')">4</button>
+        <button class="pkey" onclick="pp('5')">5</button>
+        <button class="pkey" onclick="pp('6')">6</button>
+        <button class="pkey" onclick="pp('7')">7</button>
+        <button class="pkey" onclick="pp('8')">8</button>
+        <button class="pkey" onclick="pp('9')">9</button>
+        <button class="pkey" style="opacity:0;pointer-events:none"></button>
+        <button class="pkey" onclick="pp('0')">0</button>
+        <button class="pkey" onclick="pdel()">⌫</button>
+      </div>
+      <div class="perr" id="perr"></div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div id="mainApp" class="screen">
+  <div class="topbar">
+    <div class="tbtit">📒 <span>Contact Diary</span>
+  <span style="display:inline-flex;align-items:center;gap:4px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:2px;margin-left:4px;font-family:'Space Grotesk',sans-serif;animation:livepulse 1.5s ease-in-out infinite;-webkit-text-fill-color:#fff;">
+    <span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;flex-shrink:0"></span>LIVE
+  </span>
+</div>
+    <div class="tbr">
+      <div class="chip"><div class="cdot"></div><span id="uname">User</span></div>
+      <div class="ib" id="admBtn" onclick="openAdmin()" style="display:none">⚙️</div>
+      <div class="ib" onclick="doExport()">⬇️</div>
+      <div class="ib" onclick="openImport()">⬆️</div>
+      <div class="ib" onclick="doLock()">🔒</div>
+    </div>
+  </div>
+  <div class="sw"><input class="si" id="si" placeholder="🔍 Search..." oninput="renderList()"></div>
+  <div class="cbar" id="cbar"></div>
+  <div class="stats" id="stats"></div>
+  <div class="mbody">
+    <div class="clist" id="clist"><div class="loading"><div class="spin"></div>Loading...</div></div>
+  </div>
+  <button class="fab" onclick="openAddC()">+</button>
+</div>
+
+<!-- ADMIN -->
+<div id="adminScreen" class="screen">
+  <div class="atbar">
+    <button class="abk" onclick="closeAdmin()">←</button>
+    <div class="atit">⚙️ Settings</div>
+  </div>
+  <div class="abdy">
+    <div class="asec" style="margin-top:0">👑 Admin PIN</div>
+    <div class="pcard">
+      <div style="font-size:13px;font-weight:600;margin-bottom:9px;">🔑 Change PIN</div>
+      <div class="pinrow">
+        <input class="pinfi" id="newPin" type="password" maxlength="4" placeholder="····" inputmode="numeric">
+        <button class="pinsv" onclick="savePin()">Save</button>
+      </div>
+    </div>
+    <div class="asec">👥 Users <span id="ucnt" style="color:var(--grn);font-weight:700;"></span></div>
+    <div id="uadmlist"></div>
+    <div class="addrow" onclick="openAddU()">➕ Add New User</div>
+    <div class="asec">🏷️ Categories <span id="ccnt" style="color:var(--grn);font-weight:700;"></span></div>
+    <div id="cadmlist"></div>
+    <div class="addrow" onclick="openAddCat()">➕ Add New Category</div>
+    <div class="asec">🔧 Fields <span id="fcnt" style="color:var(--grn);font-weight:700;"></span></div>
+    <div style="font-size:12px;color:var(--tx3);margin-bottom:9px;">Contact form-ல என்ன fields வேணும்</div>
+    <div id="fadmlist"></div>
+    <div class="addrow" onclick="openAddF()">➕ Add New Field</div>
+  </div>
+</div>
+
+<!-- DETAIL OV -->
+<div class="ov" id="detOv" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="hndl"></div>
+    <div class="dhead"><div class="dav" id="dav"></div><div><div class="dnm" id="dnm"></div><span class="dcat" id="dcat"></span></div></div>
+    <div class="dacts" id="dacts"></div>
+    <div class="drows" id="drows"></div>
+    <div class="dfoot">
+      <button class="ebtn" onclick="openEditC()">✏️ Edit</button>
+      <button class="dbtn" onclick="delC()">🗑️</button>
+    </div>
+  </div>
+</div>
+
+<!-- FORM OV -->
+<div class="ov" id="formOv" onclick="if(event.target===this)this.classList.remove('on')">
+  <div class="sheet" onclick="event.stopPropagation()">
+    <div class="hndl"></div>
+    <div class="ftit" id="ftit">➕ New Contact</div>
+    <div class="fbdy">
+      <input type="hidden" id="fid">
+      <div class="fg"><label class="fl">Name *</label><input class="fi" id="fname" placeholder="Contact name"></div>
+      <div class="fg"><label class="fl">Category</label><select class="fsel" id="fcat"></select></div>
+      <div id="dynF"></div>
+      <button class="sbtn" onclick="saveC()">💾 Save</button>
+      <button class="cbtn" onclick="document.getElementById('formOv').classList.remove('on')">Cancel</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD USER OV -->
+<div class="mov" id="addUOv">
+  <div class="mbox">
+    <div class="mtit" id="addUtit">➕ Add User</div>
+    <div class="msub">Name + 4-digit PIN</div>
+    <input type="hidden" id="editUID">
+    <div class="fg"><label class="fl">Name</label><input class="fi" id="newUN" placeholder="Name"></div>
+    <div class="fg" style="margin-top:9px"><label class="fl">PIN</label>
+      <input class="fi" id="newUP" type="password" maxlength="4" placeholder="····" inputmode="numeric" style="letter-spacing:5px;font-size:20px;text-align:center;"></div>
+    <div class="mbtns"><button class="mb s" onclick="closeAddU()">Cancel</button><button class="mb p" onclick="saveU()">Save</button></div>
+  </div>
+</div>
+
+<!-- ADD CAT OV -->
+<div class="mov" id="addCatOv">
+  <div class="mbox">
+    <div class="mtit" id="addCatTit">➕ Add Category</div>
+    <div class="msub">Emoji + Name</div>
+    <input type="hidden" id="editCID">
+    <div class="fg"><label class="fl">Emoji</label><input class="fi" id="newCE" placeholder="🏥" maxlength="4" style="font-size:22px;text-align:center;"></div>
+    <div class="fg" style="margin-top:9px"><label class="fl">Name</label><input class="fi" id="newCN" placeholder="e.g. Doctor"></div>
+    <div class="mbtns"><button class="mb s" onclick="closeAddCat()">Cancel</button><button class="mb p" onclick="saveCat()">Save</button></div>
+  </div>
+</div>
+
+<!-- ADD FIELD OV -->
+<div class="mov" id="addFOv">
+  <div class="mbox">
+    <div class="mtit" id="addFTit">➕ Add Field</div>
+    <div class="msub">Contact form-ல show ஆகும்</div>
+    <input type="hidden" id="editFID">
+    <div class="fg"><label class="fl">Name</label><input class="fi" id="newFN" placeholder="e.g. Phone"></div>
+    <div class="fg" style="margin-top:9px"><label class="fl">Type</label>
+      <select class="fsel" id="newFT">
+        <option value="tel">📞 Phone</option>
+        <option value="text">✏️ Text</option>
+        <option value="url">🔗 URL</option>
+        <option value="email">📧 Email</option>
+        <option value="date">📅 Date</option>
+        <option value="textarea">📝 Long Text</option>
+      </select></div>
+    <div class="fg" style="margin-top:9px"><label class="fl">Emoji</label><input class="fi" id="newFE" placeholder="📞" maxlength="4" style="font-size:18px;text-align:center;"></div>
+    <div class="fg" style="margin-top:9px"><label class="fl">Placeholder</label><input class="fi" id="newFP" placeholder="e.g. Enter phone"></div>
+    <div class="mbtns"><button class="mb s" onclick="closeAddF()">Cancel</button><button class="mb p" onclick="saveF()">Save</button></div>
+  </div>
+</div>
+
+<!-- IMPORT OV -->
+<div class="mov" id="impOv">
+  <div class="mbox">
+    <div class="mtit">⬆️ Import</div>
+    <div class="msub">CSV or VCF file</div>
+    <div style="background:var(--sur2);border:1px dashed var(--bdr);border-radius:10px;padding:18px;text-align:center;cursor:pointer;margin-bottom:10px;" onclick="document.getElementById('impFile').click()">
+      <div style="font-size:28px;margin-bottom:6px;">📁</div>
+      <div style="font-size:13px;color:var(--tx2);">Tap to select</div>
+      <div style="font-size:11px;color:var(--tx3);margin-top:3px;" id="impName">No file</div>
+    </div>
+    <input type="file" id="impFile" accept=".csv,.vcf" style="display:none" onchange="handleImp(this)">
+    <div id="impPrev" style="display:none;max-height:140px;overflow-y:auto;margin-bottom:10px;"></div>
+    <div class="mbtns">
+      <button class="mb s" onclick="closeImp()">Cancel</button>
+      <button class="mb p" id="impBtn" style="display:none" onclick="doImport()">Import</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, set, get, remove, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+
+const FC = {
+  apiKey:"AIzaSyBVGVu59jDZybPFAX_pRisSrQRoXHQ0EWY",
+  authDomain:"kmbsc-chit.firebaseapp.com",
+  databaseURL:"https://kmbsc-chit-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId:"kmbsc-chit",
+  storageBucket:"kmbsc-chit.firebasestorage.app",
+  messagingSenderId:"511325458985",
+  appId:"1:511325458985:web:a7597bcf0f89b71405c238"
+};
+
+const app = initializeApp(FC);
+const db  = getDatabase(app);
+const P   = "contact_diary";
+
+// STATE
+let contacts=[], users=[], cats=[], fields=[];
+let adminPin="1234", loggedUser=null, selUser=null;
+let curFilter="", pinBuf="", curC=null, impData=[];
+
+// HELPERS
+const $  = id => document.getElementById(id);
+const toast = m => { const t=$('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2200); };
+const avc = n => { const c=['#0ea5e9','#14b8a6','#6366f1','#f59e0b','#10b981','#3b82f6','#8b5cf6','#06b6d4']; let h=0; for(let x of(n||''))h=(h*31+x.charCodeAt(0))%c.length; return c[h]; };
+const snap2arr = s => { const r=[]; if(s&&s.exists()) s.forEach(c=>{const v=c.val();if(v)r.push({id:c.key,...v});}); return r; };
+
+function screen(id){
+  ['loginScreen','mainApp','adminScreen'].forEach(s=>$(s).classList.remove('active'));
+  $(id).classList.add('active');
+}
+
+// INIT — use onValue for real-time, guaranteed load
+async function init(){
+  // Load settings
+  onValue(ref(db,`${P}/settings`), s=>{
+    if(s.exists()&&s.val()&&s.val().adminPin) adminPin=s.val().adminPin;
+  });
+
+  // Load users once
+  const uSnap = await get(ref(db,`${P}/users`));
+  users = snap2arr(uSnap);
+
+  // Real-time listeners for cats & fields
+  onValue(ref(db,`${P}/categories`), s=>{
+    cats = snap2arr(s);
+    if(loggedUser){
+      renderCbar();
+      renderAdmCats();
+    }
+  });
+
+  onValue(ref(db,`${P}/fields`), s=>{
+    fields = snap2arr(s).sort((a,b)=>(a.order||0)-(b.order||0));
+    if(loggedUser){
+      renderAdmFlds();
+    }
+  });
+
+  // Load contacts once
+  const cSnap = await get(ref(db,`${P}/contacts`));
+  contacts = snap2arr(cSnap).filter(x=>x.name).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+
+  renderLoginUsers();
+  screen('loginScreen');
+}
+
+// LOGIN
+function renderLoginUsers(){
+  let h=`<button class="ubtn" onclick="selU('__admin__')">
+    <div class="uav" style="background:linear-gradient(135deg,#0ea5e9,#14b8a6);color:#fff">R</div>
+    <div><div class="unm">Ramesh</div><div class="url2">Admin</div></div>
+    <span class="ubdg">👑</span>
+  </button>`;
+  users.filter(u=>u.enabled!==false).forEach(u=>{
+    h+=`<button class="ubtn" onclick="selU('${u.id}')">
+      <div class="uav" style="background:${avc(u.name)};color:#fff">${u.name[0].toUpperCase()}</div>
+      <div><div class="unm">${u.name}</div><div class="url2">${u.role||'Member'}</div></div>
+    </button>`;
+  });
+  $('ulist').innerHTML=h;
+  $('ulist').style.display='flex';
+  $('pinw').style.display='none';
+  $('lsub').textContent='Select your profile';
+}
+
+window.selU = id => {
+  selUser = id==='__admin__'?{id:'__admin__',name:'Ramesh',isAdmin:true}:users.find(u=>u.id===id);
+  if(!selUser)return;
+  pinBuf=''; updDots();
+  $('pwho').innerHTML=`Login as <strong>${selUser.name}</strong>`;
+  $('ulist').style.display='none';
+  $('pinw').style.display='block';
+  $('lsub').textContent='Enter PIN';
+  $('perr').textContent='';
+};
+
+window.backToUsers = () => {
+  $('ulist').style.display='flex';
+  $('pinw').style.display='none';
+  $('lsub').textContent='Select your profile';
+  selUser=null; pinBuf=''; updDots();
+};
+
+window.pp = d => {
+  if(pinBuf.length>=4)return;
+  pinBuf+=d; updDots();
+  if(pinBuf.length===4){
+    setTimeout(()=>{
+      const ok=selUser.isAdmin?adminPin:(selUser.pin||'0000');
+      if(pinBuf===ok){
+        loggedUser=selUser;
+        if(!selUser.isAdmin) update(ref(db,`${P}/users/${selUser.id}`),{lastLogin:Date.now()});
+        enterApp();
+      } else {
+        $('perr').textContent='Wrong PIN';
+        pinBuf=''; updDots();
+        setTimeout(()=>$('perr').textContent='',1600);
+      }
+    },120);
+  }
+};
+window.pdel = () => { pinBuf=pinBuf.slice(0,-1); updDots(); };
+function updDots(){ for(let i=0;i<4;i++) $(`pd${i}`).classList.toggle('on',i<pinBuf.length); }
+
+function enterApp(){
+  screen('mainApp');
+  $('uname').textContent=loggedUser.name;
+  $('admBtn').style.display=loggedUser.isAdmin?'flex':'none';
+  renderCbar();
+  renderList();
+}
+
+window.doLock = () => {
+  loggedUser=null; selUser=null; pinBuf=''; updDots();
+  renderLoginUsers();
+  screen('loginScreen');
+};
+
+// RENDER LIST
+function renderCbar(){
+  let h=`<div class="cchip on" onclick="setC('')" data-c="">All</div>`;
+  cats.forEach(c=>h+=`<div class="cchip" onclick="setC('${c.name}')" data-c="${c.name}">${c.emoji} ${c.name}</div>`);
+  $('cbar').innerHTML=h;
+  document.querySelectorAll('.cchip').forEach(el=>el.classList.toggle('on',el.dataset.c===curFilter));
+}
+
+window.setC = c => { curFilter=c; document.querySelectorAll('.cchip').forEach(el=>el.classList.toggle('on',el.dataset.c===c)); renderList(); };
+
+window.renderList = () => {
+  const q=$('si').value.trim().toLowerCase();
+  let list=contacts;
+  if(curFilter) list=list.filter(c=>c.category===curFilter);
+  if(q) list=list.filter(c=>c.name.toLowerCase().includes(q)||Object.values(c.fields||{}).some(v=>String(v).toLowerCase().includes(q))||(c.category||'').toLowerCase().includes(q));
+  $('stats').textContent=`${list.length} contact${list.length!==1?'s':''}`;
+  if(!list.length){ $('clist').innerHTML=`<div class="empty"><div class="eic">📭</div><div class="et">No contacts</div><div>Tap + to add</div></div>`; return; }
+  const grp={};
+  list.forEach(c=>{const l=c.name[0].toUpperCase();if(!grp[l])grp[l]=[];grp[l].push(c);});
+  let h='';
+  Object.keys(grp).sort().forEach(l=>{
+    h+=`<div class="slbl">${l}</div>`;
+    grp[l].forEach(c=>{
+      const pf=fields.find(f=>f.type==='tel');
+      const ph=pf?(c.fields||{})[pf.id]||'':'';
+      const badge=ph?`<a href="tel:${ph}" class="cbdg" onclick="event.stopPropagation()">📞</a>`:'';
+      h+=`<div class="ccard" onclick="showD('${c.id}')">
+        <div class="cav" style="background:${avc(c.name)};color:#fff">${c.name[0].toUpperCase()}</div>
+        <div class="ci"><div class="cn">${c.name}</div><div class="cm">${c.category||''}${ph?' · '+ph:''}</div></div>
+        ${badge}
+      </div>`;
+    });
+  });
+  $('clist').innerHTML=h;
+};
+
+// DETAIL
+window.showD = id => {
+  curC=contacts.find(c=>c.id===id);
+  if(!curC)return;
+  const c=curC;
+  $('dav').textContent=c.name[0].toUpperCase();
+  $('dav').style.cssText=`background:${avc(c.name)};color:#fff;width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;font-family:'Space Grotesk',sans-serif;`;
+  $('dnm').textContent=c.name;
+  const cc=cats.find(x=>x.name===c.category);
+  const ccol=cc?avc(c.category):'#7ea8c9';
+  $('dcat').textContent=c.category||'';
+  $('dcat').style.cssText=`background:${ccol}22;color:${ccol};font-size:12px;padding:2px 8px;border-radius:8px;font-weight:500;`;
+  let acts='';
+  fields.forEach(f=>{
+    const v=(c.fields||{})[f.id];
+    if(!v)return;
+    if(f.type==='tel'){
+      acts+=`<a href="tel:${v}" class="abt call"><span class="ai">📞</span>Call</a>`;
+      acts+=`<a href="https://wa.me/91${v.replace(/\D/g,'')}" target="_blank" class="abt wa"><span class="ai">💬</span>WhatsApp</a>`;
+    }
+  });
+  acts+=`<div class="abt sh" onclick="shareC()"><span class="ai">📤</span>Share</div>`;
+  $('dacts').innerHTML=acts;
+  let rows='';
+  fields.forEach(f=>{
+    const v=(c.fields||{})[f.id];
+    if(!v)return;
+    const href=f.type==='tel'?`tel:${v}`:f.type==='email'?`mailto:${v}`:f.type==='url'?v:null;
+    const ml=f.type==='textarea';
+    rows+=`<div class="drow" data-l="${f.name.replace(/"/g,'')}" data-v="${String(v).replace(/"/g,'')}">
+      <div class="dic">${f.emoji||'📌'}</div>
+      <div class="dct"><div class="dl">${f.name}</div><div class="dv${ml?' ml':''}">${v}</div></div>
+      ${href?`<a href="${href}" target="_blank" class="darr">›</a>`:`<div style="font-size:16px;cursor:pointer" onclick="cpRow(this)">📋</div>`}
+    </div>`;
+  });
+  $('drows').innerHTML=rows;
+  $('detOv').classList.add('on');
+};
+
+window.cpRow = el => { const r=el.closest('.drow'); navigator.clipboard?.writeText((r.dataset.l||'')+'\n'+(r.dataset.v||'')).then(()=>toast('✅ Copied!')); };
+window.shareC = () => {
+  const c=curC; let t=`📒 *${c.name}*\n${c.category?c.category+'\n':''}\n`;
+  fields.forEach(f=>{const v=(c.fields||{})[f.id];if(v)t+=`${f.emoji||'•'} ${f.name}: ${v}\n`;});
+  if(navigator.share)navigator.share({title:c.name,text:t}); else navigator.clipboard?.writeText(t).then(()=>toast('✅ Copied!'));
+};
+
+// CONTACT FORM
+function populateCat(cur=''){
+  $('fcat').innerHTML=cats.length?cats.map(c=>`<option value="${c.name}" ${c.name===cur?'selected':''}>${c.emoji} ${c.name}</option>`).join(''):'<option value="">No categories</option>';
+}
+function renderDynF(data={}){
+  if(!fields.length){$('dynF').innerHTML=`<div style="color:var(--tx3);font-size:13px;text-align:center;padding:16px 0">⚙️ Admin-ல fields add பண்ணுங்க</div>`;return;}
+  $('dynF').innerHTML=fields.map(f=>{
+    const v=data[f.id]||'';
+    return `<div class="fg"><label class="fl">${f.emoji||''} ${f.name}</label>${f.type==='textarea'?`<textarea class="fi" id="ff_${f.id}" placeholder="${f.placeholder||''}">${v}</textarea>`:`<input class="fi" type="${f.type}" id="ff_${f.id}" placeholder="${f.placeholder||''}" value="${v}">`}</div>`;
+  }).join('');
+}
+
+window.openAddC = () => {
+  $('ftit').textContent='➕ New Contact'; $('fid').value=''; $('fname').value='';
+  populateCat(); renderDynF();
+  $('formOv').classList.add('on');
+};
+window.openEditC = () => {
+  const c=curC;
+  $('ftit').textContent='✏️ Edit Contact'; $('fid').value=c.id; $('fname').value=c.name||'';
+  populateCat(c.category); renderDynF(c.fields||{});
+  $('detOv').classList.remove('on'); $('formOv').classList.add('on');
+};
+window.saveC = async () => {
+  const name=$('fname').value.trim();
+  if(!name){toast('⚠️ Name required');return;}
+  const flds={};
+  fields.forEach(f=>{const el=$(`ff_${f.id}`);if(el)flds[f.id]=el.value.trim();});
+  const data={name,category:$('fcat').value,fields:flds,updatedAt:Date.now(),updatedBy:loggedUser.name};
+  const id=$('fid').value;
+  if(id){
+    await set(ref(db,`${P}/contacts/${id}`),data);
+    contacts=contacts.map(c=>c.id===id?{id,...data}:c);
+  } else {
+    data.createdAt=Date.now();
+    const r=await push(ref(db,`${P}/contacts`),data);
+    contacts.push({id:r.key,...data});
+    contacts.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  }
+  $('formOv').classList.remove('on');
+  renderList(); toast('✅ Saved!');
+};
+window.delC = async () => {
+  if(!curC||!confirm(`Delete "${curC.name}"?`))return;
+  await remove(ref(db,`${P}/contacts/${curC.id}`));
+  contacts=contacts.filter(c=>c.id!==curC.id);
+  $('detOv').classList.remove('on');
+  renderList(); toast('🗑️ Deleted');
+};
+
+// EXPORT/IMPORT
+window.doExport = () => {
+  if(!contacts.length){toast('No contacts');return;}
+  const hdr=['Name','Category',...fields.map(f=>f.name)];
+  let csv=hdr.join(',')+'\n';
+  contacts.forEach(c=>{const row=[c.name,c.category||'',...fields.map(f=>(c.fields||{})[f.id]||'')];csv+=row.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')+'\n';});
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download='contacts.csv';a.click();
+  toast('📥 Exported!');
+};
+window.openImport = () => $('impOv').classList.add('on');
+window.closeImp = () => {$('impOv').classList.remove('on');$('impPrev').style.display='none';$('impBtn').style.display='none';$('impName').textContent='No file';impData=[];};
+window.handleImp = inp => {
+  const f=inp.files[0];if(!f)return;
+  $('impName').textContent=f.name;
+  const r=new FileReader();
+  r.onload=e=>{ f.name.endsWith('.vcf')?pVCF(e.target.result):pCSV(e.target.result); };
+  r.readAsText(f);
+};
+function pCSV(t){const l=t.trim().split('\n');if(l.length<2){toast('⚠️ Empty');return;}const h=l[0].split(',').map(x=>x.replace(/"/g,'').trim());impData=[];for(let i=1;i<l.length;i++){const v=l[i].split(',').map(x=>x.replace(/"/g,'').trim());const o={};h.forEach((x,j)=>o[x]=v[j]||'');if(o.Name||o.name)impData.push(o);}showImpP();}
+function pVCF(t){impData=[];t.split('BEGIN:VCARD').forEach(c=>{const n=c.match(/FN:(.*)/),p=c.match(/TEL[^:]*:(.*)/);if(n)impData.push({Name:n[1].trim(),Phone:p?p[1].trim():''});});showImpP();}
+function showImpP(){if(!impData.length){toast('⚠️ No contacts');return;}let h=`<div style="font-size:12px;color:var(--tx2);margin-bottom:7px">${impData.length} found:</div>`;impData.slice(0,5).forEach(c=>{h+=`<div style="font-size:13px;padding:3px 0;border-bottom:1px solid var(--bdr)">${c.Name||c.name||'?'}</div>`;});if(impData.length>5)h+=`<div style="font-size:12px;color:var(--tx3);margin-top:3px">+${impData.length-5} more</div>`;$('impPrev').innerHTML=h;$('impPrev').style.display='block';$('impBtn').style.display='block';}
+window.doImport = async () => {
+  let n=0;
+  for(const c of impData){
+    const nm=c.Name||c.name||'';if(!nm)continue;
+    const flds={};const pf=fields.find(f=>f.type==='tel');
+    if(pf&&(c.Phone||c.phone))flds[pf.id]=c.Phone||c.phone;
+    const r=await push(ref(db,`${P}/contacts`),{name:nm,category:'',fields:flds,createdAt:Date.now(),updatedBy:'Import'});
+    contacts.push({id:r.key,name:nm,category:'',fields:flds});
+    n++;
+  }
+  contacts.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  closeImp(); renderList(); toast(`✅ ${n} imported!`);
+};
+
+// ADMIN
+window.openAdmin = () => { renderAdm(); screen('adminScreen'); };
+window.closeAdmin = () => { renderCbar(); screen('mainApp'); };
+window.savePin = async () => {
+  const p=$('newPin').value.trim();
+  if(p.length!==4||!/^\d{4}$/.test(p)){toast('⚠️ 4 digits');return;}
+  await set(ref(db,`${P}/settings/adminPin`),p);
+  adminPin=p; $('newPin').value=''; toast('✅ PIN changed!');
+};
+
+function renderAdm(){ renderAdmUsers(); renderAdmCats(); renderAdmFlds(); }
+
+// USERS
+function renderAdmUsers(){
+  $('ucnt').textContent=`${users.filter(u=>u.enabled!==false).length} active`;
+  $('uadmlist').innerHTML=users.length?users.map(u=>{
+    const on=u.enabled!==false;
+    const last=u.lastLogin?new Date(u.lastLogin).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Never';
+    return `<div class="row"><div class="sdot ${on?'on':'off'}"></div>
+      <div class="rav" style="background:${avc(u.name)};color:#fff">${u.name[0].toUpperCase()}</div>
+      <div class="ri"><div class="rn">${u.name}${!on?'<span style="font-size:10px;color:var(--red);margin-left:5px">Off</span>':''}</div><div class="rm">Last: ${last}</div></div>
+      <div class="racts">
+        <button class="rb" onclick="openEditU('${u.id}')">✏️</button>
+        <button class="rb" onclick="rstPin('${u.id}')">🔑</button>
+        <button class="rb" onclick="togU('${u.id}',${on})">${on?'🚫':'✅'}</button>
+        <button class="rb d" onclick="rmU('${u.id}')">🗑️</button>
+      </div></div>`;
+  }).join(''):'<div style="color:var(--tx3);font-size:13px;padding:6px 0">No users yet.</div>';
+}
+window.openAddU = () => {$('addUtit').textContent='➕ Add User';$('editUID').value='';$('newUN').value='';$('newUP').value='';$('addUOv').classList.add('on');};
+window.openEditU = id => {const u=users.find(x=>x.id===id);if(!u)return;$('addUtit').textContent='✏️ Edit User';$('editUID').value=id;$('newUN').value=u.name;$('newUP').value='';$('addUOv').classList.add('on');};
+window.closeAddU = () => $('addUOv').classList.remove('on');
+window.saveU = async () => {
+  const name=$('newUN').value.trim(),pin=$('newUP').value.trim(),id=$('editUID').value;
+  if(!name){toast('⚠️ Name required');return;}
+  if(!id&&(pin.length!==4||!/^\d{4}$/.test(pin))){toast('⚠️ 4-digit PIN');return;}
+  if(id){const upd={name};if(pin.length===4)upd.pin=pin;await update(ref(db,`${P}/users/${id}`),upd);users=users.map(u=>u.id===id?{...u,...upd}:u);}
+  else{const r=await push(ref(db,`${P}/users`),{name,pin,enabled:true,createdAt:Date.now()});users.push({id:r.key,name,pin,enabled:true});}
+  closeAddU();renderAdmUsers();toast('✅ User saved!');
+};
+window.rstPin = async id => {const p=prompt('New 4-digit PIN:');if(!p||p.length!==4||!/^\d{4}$/.test(p)){toast('⚠️ Invalid');return;}await update(ref(db,`${P}/users/${id}`),{pin:p});users=users.map(u=>u.id===id?{...u,pin:p}:u);toast('🔑 Reset!');};
+window.togU = async (id,on) => {await update(ref(db,`${P}/users/${id}`),{enabled:!on});users=users.map(u=>u.id===id?{...u,enabled:!on}:u);renderAdmUsers();toast(on?'🚫 Disabled':'✅ Enabled');};
+window.rmU = async id => {const u=users.find(x=>x.id===id);if(!confirm(`Remove "${u?.name}"?`))return;await remove(ref(db,`${P}/users/${id}`));users=users.filter(x=>x.id!==id);renderAdmUsers();toast('🗑️ Removed');};
+
+// CATEGORIES
+function renderAdmCats(){
+  $('ccnt').textContent=`${cats.length} total`;
+  $('cadmlist').innerHTML=cats.length?cats.map(c=>`<div class="row">
+    <div style="font-size:20px">${c.emoji}</div>
+    <div class="ri"><div class="rn">${c.name}</div></div>
+    <div class="racts">
+      <button class="rb" onclick="openEditCat('${c.id}')">✏️</button>
+      <button class="rb d" onclick="rmCat('${c.id}','${c.name}')">🗑️</button>
+    </div></div>`).join(''):'<div style="color:var(--tx3);font-size:13px;padding:6px 0">No categories.</div>';
+}
+window.openAddCat = () => {$('addCatTit').textContent='➕ Add Category';$('editCID').value='';$('newCE').value='';$('newCN').value='';$('addCatOv').classList.add('on');};
+window.openEditCat = id => {const c=cats.find(x=>x.id===id);if(!c)return;$('addCatTit').textContent='✏️ Edit';$('editCID').value=id;$('newCE').value=c.emoji;$('newCN').value=c.name;$('addCatOv').classList.add('on');};
+window.closeAddCat = () => $('addCatOv').classList.remove('on');
+window.saveCat = async () => {
+  const emoji=$('newCE').value.trim()||'📌', name=$('newCN').value.trim(), id=$('editCID').value;
+  if(!name){toast('⚠️ Name required');return;}
+  if(id){
+    await set(ref(db,`${P}/categories/${id}`),{emoji,name});
+  } else {
+    await push(ref(db,`${P}/categories`),{emoji,name});
+  }
+  closeAddCat();
+  toast('✅ Category saved!');
+  // onValue listener will auto-update cats array and renderAdmCats
+};
+window.rmCat = async (id,name) => {
+  if(!confirm(`Delete "${name}"?`))return;
+  await remove(ref(db,`${P}/categories/${id}`));
+  toast('🗑️ Deleted');
+};
+
+// FIELDS
+function renderAdmFlds(){
+  $('fcnt').textContent=`${fields.length} total`;
+  $('fadmlist').innerHTML=fields.length?fields.map((f,i)=>`<div class="row">
+    <div style="font-size:18px">${f.emoji||'📌'}</div>
+    <div class="ri"><div class="rn">${f.name}</div><div class="rm">${f.type}${f.placeholder?' · '+f.placeholder:''}</div></div>
+    <div class="racts">
+      <button class="rb" onclick="movF('${f.id}',-1)" ${i===0?'disabled':''}>↑</button>
+      <button class="rb" onclick="movF('${f.id}',1)" ${i===fields.length-1?'disabled':''}>↓</button>
+      <button class="rb" onclick="openEditF('${f.id}')">✏️</button>
+      <button class="rb d" onclick="rmF('${f.id}','${f.name}')">🗑️</button>
+    </div></div>`).join(''):'<div style="color:var(--tx3);font-size:13px;padding:6px 0">No fields yet.</div>';
+}
+window.openAddF = () => {$('addFTit').textContent='➕ Add Field';$('editFID').value='';$('newFN').value='';$('newFT').value='text';$('newFE').value='';$('newFP').value='';$('addFOv').classList.add('on');};
+window.openEditF = id => {const f=fields.find(x=>x.id===id);if(!f)return;$('addFTit').textContent='✏️ Edit Field';$('editFID').value=id;$('newFN').value=f.name;$('newFT').value=f.type;$('newFE').value=f.emoji||'';$('newFP').value=f.placeholder||'';$('addFOv').classList.add('on');};
+window.closeAddF = () => $('addFOv').classList.remove('on');
+window.saveF = async () => {
+  const name=$('newFN').value.trim(),type=$('newFT').value,emoji=$('newFE').value.trim(),placeholder=$('newFP').value.trim(),id=$('editFID').value;
+  if(!name){toast('⚠️ Name required');return;}
+  const order=id?(fields.find(x=>x.id===id)?.order||0):fields.length;
+  const data={name,type,emoji,placeholder,order};
+  if(id){
+    await set(ref(db,`${P}/fields/${id}`),data);
+  } else {
+    await push(ref(db,`${P}/fields`),data);
+  }
+  closeAddF();
+  toast('✅ Field saved!');
+  // onValue listener will auto-update fields array and renderAdmFlds
+};
+window.rmF = async (id,name) => {
+  if(!confirm(`Delete "${name}"?`))return;
+  await remove(ref(db,`${P}/fields/${id}`));
+  toast('🗑️ Deleted');
+};
+window.movF = async (id,dir) => {
+  const i=fields.findIndex(f=>f.id===id),j=i+dir;
+  if(j<0||j>=fields.length)return;
+  [fields[i],fields[j]]=[fields[j],fields[i]];
+  const upd={};fields.forEach((f,k)=>upd[`${P}/fields/${f.id}/order`]=k);
+  await update(ref(db),upd);
+};
+
+init();
+</script>
+</body>
+</html>
