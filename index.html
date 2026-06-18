@@ -650,8 +650,8 @@ window.renderList = () => {
       card.style.transform=`translateX(${Math.max(-70,Math.min(70,dx))}px)`;
       const callHint=card.querySelector('.swipe-call');
       const waHint=card.querySelector('.swipe-wa');
-      if(callHint) callHint.style.opacity=dx>30?Math.min(1,(dx-30)/40):'0';
-      if(waHint) waHint.style.opacity=dx<-30?Math.min(1,(-dx-30)/40):'0';
+      if(callHint) callHint.style.opacity=dx<-30?Math.min(1,(-dx-30)/40):'0';
+      if(waHint) waHint.style.opacity=dx>30?Math.min(1,(dx-30)/40):'0';
     },{ passive:true });
     card.addEventListener('touchend', e=>{
       const dx=e.changedTouches[0].clientX-sx;
@@ -663,8 +663,8 @@ window.renderList = () => {
       if(callHint) callHint.style.opacity='0';
       if(waHint) waHint.style.opacity='0';
       if(dy>30) return;
-      if(dx>60){ trackContact(id,'call'); window.location.href=`tel:${ph}`; }
-      else if(dx<-60){ trackContact(id,'wa'); window.open(`https://wa.me/91${num}`,'_blank'); }
+      if(dx>60){ trackContact(id,'wa'); window.open(`https://wa.me/91${num}`,'_blank'); }
+      else if(dx<-60){ trackContact(id,'call'); window.location.href=`tel:${ph}`; }
     });
   });
 };
