@@ -56,8 +56,10 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Inter',
 .pkey:active{background:var(--acc);border-color:var(--acc);}
 .perr{color:var(--red);font-size:12px;margin-top:9px;min-height:16px;text-align:center;}
 /* TOPBAR */
-.topbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:12px 12px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-shrink:0;}
-.tbtit{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;display:flex;align-items:center;gap:5px;white-space:nowrap;}
+.topbar{background:var(--sur);border-bottom:1px solid var(--bdr);padding:10px 12px 6px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;}
+.tbrow1{display:flex;align-items:center;gap:8px;}
+.tbrow2{display:flex;align-items:center;gap:6px;justify-content:flex-end;}
+.tbtit{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;display:flex;align-items:center;gap:5px;white-space:nowrap;flex:1;}
 .tbtit span{background:linear-gradient(135deg,var(--acc),var(--tea));-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
 .tbr{display:flex;gap:5px;align-items:center;flex-shrink:0;}
 .chip{background:var(--sur2);border:1px solid var(--bdr);border-radius:8px;padding:5px 10px;font-size:12px;display:flex;align-items:center;gap:4px;white-space:nowrap;}
@@ -222,13 +224,15 @@ textarea.fi{resize:vertical;min-height:60px;}
 <!-- MAIN -->
 <div id="mainApp" class="screen">
   <div class="topbar">
-    <div class="tbtit">📒 <span>Contact Diary</span>
-  <span style="display:inline-flex;align-items:center;gap:4px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:2px;margin-left:4px;font-family:'Space Grotesk',sans-serif;animation:livepulse 1.5s ease-in-out infinite;-webkit-text-fill-color:#fff;">
-    <span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;flex-shrink:0"></span>LIVE
-  </span>
-</div>
-    <div class="tbr">
+    <div class="tbrow1">
+      <div class="tbtit">📒 <span>Contact Diary</span>
+        <span style="display:inline-flex;align-items:center;gap:4px;background:#ef4444;color:#fff;font-size:11px;font-weight:800;padding:3px 8px;border-radius:6px;letter-spacing:2px;margin-left:4px;font-family:'Space Grotesk',sans-serif;animation:livepulse 1.5s ease-in-out infinite;-webkit-text-fill-color:#fff;">
+          <span style="width:7px;height:7px;border-radius:50%;background:#fff;display:inline-block;flex-shrink:0"></span>LIVE
+        </span>
+      </div>
       <div class="chip"><div class="cdot"></div><span id="uname">User</span></div>
+    </div>
+    <div class="tbrow2">
       <div class="ib" id="admBtn" onclick="openAdmin()" style="display:none">⚙️</div>
       <div class="ib" onclick="toggleTheme()" id="themeBtn">🌙</div>
       <div class="ib" onclick="doExport()">⬇️</div>
