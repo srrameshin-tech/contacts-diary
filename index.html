@@ -79,8 +79,12 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Inter',
 .mbody{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding-bottom:80px;overflow-x:hidden;}
 .clist{padding:0 10px 14px;}
 .slbl{font-size:10px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;padding:12px 0 6px;}
-.ccard{background:var(--sur);border:1px solid var(--bdr);border-radius:11px;padding:9px 10px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:9px;width:100%;overflow:hidden;}
+.ccard{background:var(--sur);border:1px solid var(--bdr);border-radius:11px;padding:9px 10px;margin-bottom:8px;cursor:pointer;display:flex;align-items:center;gap:9px;width:100%;overflow:hidden;position:relative;transition:transform .15s ease,box-shadow .15s ease;}
 .ccard:active{border-color:var(--acc);}
+.ccard.swiping{transition:none;}
+/* Swipe hint labels */
+.swipe-call{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-size:18px;opacity:0;transition:opacity .15s;pointer-events:none;}
+.swipe-wa{position:absolute;right:12px;top:50%;transform:translateY(-50%);font-size:18px;opacity:0;transition:opacity .15s;pointer-events:none;}
 .cav{width:36px;height:36px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;font-weight:700;font-family:'Space Grotesk',sans-serif;flex-shrink:0;}
 .ci{flex:1;min-width:0;overflow:hidden;}
 .cn{font-weight:600;font-size:12px;margin-bottom:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;}
@@ -594,45 +598,71 @@ window.renderList = () => {
   });
   const favs = list.filter(c=>c.fav);
   const rest = list.filter(c=>!c.fav);
+  // Card builder helper
+  const mkCard = (c, isFav) => {
+    const pf=fields.find(f=>f.type==='tel');
+    const ph=pf?(c.fields||{})[pf.id]||'':'';
+    const num=ph.replace(/\D/g,'');
+    const badges=ph?`
+      <a href="tel:${ph}" class="cbdg" onclick="event.stopPropagation();trackContact('${c.id}','call')" title="Call">📞</a>
+      <a href="https://wa.me/91${num}" target="_blank" class="wabdg" onclick="event.stopPropagation();trackContact('${c.id}','wa')" title="WhatsApp">💬</a>
+    `:'';
+    const catCol = c.category ? avc(c.category) : null;
+    const borderStyle = catCol ? `border-left:3px solid ${catCol};` : '';
+    const swipeHints = ph ? `<span class="swipe-call">📞</span><span class="swipe-wa">💬</span>` : '';
+    return `<div class="ccard" onclick="showD('${c.id}')" data-id="${c.id}" data-ph="${ph}" data-num="${num}" style="${borderStyle}">
+      ${swipeHints}
+      <div class="cav" style="background:${avc(c.name)};color:#fff">${ini(c.name)}</div>
+      <div class="ci"><div class="cn">${c.name}</div><div class="cm">${c.category||''}${ph?' · '+ph:''}</div></div>
+      <div style="display:flex;gap:5px;flex-shrink:0;align-items:center">${badges}<button class="star-btn ${isFav?'on':''}" onclick="event.stopPropagation();toggleFav('${c.id}')">${isFav?'⭐':'☆'}</button></div>
+    </div>`;
+  };
   let h='';
   if(favs.length){
     h+=`<div class="slbl">⭐ Favourites</div>`;
-    favs.forEach(c=>{
-      const pf=fields.find(f=>f.type==='tel');
-      const ph=pf?(c.fields||{})[pf.id]||'':'';
-      const num=ph.replace(/\D/g,'');
-      const badges=ph?`
-        <a href="tel:${ph}" class="cbdg" onclick="event.stopPropagation();trackContact('${c.id}','call')" title="Call">📞</a>
-        <a href="https://wa.me/91${num}" target="_blank" class="wabdg" onclick="event.stopPropagation();trackContact('${c.id}','wa')" title="WhatsApp">💬</a>
-      `:'';
-      h+=`<div class="ccard" onclick="showD('${c.id}')">
-        <div class="cav" style="background:${avc(c.name)};color:#fff">${ini(c.name)}</div>
-        <div class="ci"><div class="cn">${c.name}</div><div class="cm">${c.category||''}${ph?' · '+ph:''}</div></div>
-        <div style="display:flex;gap:5px;flex-shrink:0;align-items:center">${badges}<button class="star-btn on" onclick="event.stopPropagation();toggleFav('${c.id}')">⭐</button></div>
-      </div>`;
-    });
+    favs.forEach(c=>{ h+=mkCard(c,true); });
   }
   const grp={};
   rest.forEach(c=>{const l=c.name[0].toUpperCase();if(!grp[l])grp[l]=[];grp[l].push(c);});
   Object.keys(grp).sort().forEach(l=>{
     h+=`<div class="slbl">${l}</div>`;
-    grp[l].forEach(c=>{
-      const pf=fields.find(f=>f.type==='tel');
-      const ph=pf?(c.fields||{})[pf.id]||'':'';
-      const num=ph.replace(/\D/g,'');
-      const badges=ph?`
-        <a href="tel:${ph}" class="cbdg" onclick="event.stopPropagation();trackContact('${c.id}','call')" title="Call">📞</a>
-        <a href="https://wa.me/91${num}" target="_blank" class="wabdg" onclick="event.stopPropagation();trackContact('${c.id}','wa')" title="WhatsApp">💬</a>
-      `:'';
-      h+=`<div class="ccard" onclick="showD('${c.id}')">
-        <div class="cav" style="background:${avc(c.name)};color:#fff">${ini(c.name)}</div>
-        <div class="ci"><div class="cn">${c.name}</div><div class="cm">${c.category||''}${ph?' · '+ph:''}</div></div>
-        <div style="display:flex;gap:5px;flex-shrink:0;align-items:center">${badges}<button class="star-btn ${c.fav?'on':''}" onclick="event.stopPropagation();toggleFav('${c.id}')">${c.fav?'⭐':'☆'}</button></div>
-      </div>`;
-    });
+    grp[l].forEach(c=>{ h+=mkCard(c,false); });
   });
   $('clist').innerHTML=h;
   checkDupes();
+  // Attach swipe gestures
+  document.querySelectorAll('.ccard').forEach(card=>{
+    const ph=card.dataset.ph;
+    const num=card.dataset.num;
+    const id=card.dataset.id;
+    if(!ph) return;
+    let sx=0, sy=0;
+    card.addEventListener('touchstart', e=>{ sx=e.touches[0].clientX; sy=e.touches[0].clientY; },{ passive:true });
+    card.addEventListener('touchmove', e=>{
+      const dx=e.touches[0].clientX-sx;
+      const dy=Math.abs(e.touches[0].clientY-sy);
+      if(dy>30) return; // vertical scroll, ignore
+      card.classList.add('swiping');
+      card.style.transform=`translateX(${Math.max(-70,Math.min(70,dx))}px)`;
+      const callHint=card.querySelector('.swipe-call');
+      const waHint=card.querySelector('.swipe-wa');
+      if(callHint) callHint.style.opacity=dx>30?Math.min(1,(dx-30)/40):'0';
+      if(waHint) waHint.style.opacity=dx<-30?Math.min(1,(-dx-30)/40):'0';
+    },{ passive:true });
+    card.addEventListener('touchend', e=>{
+      const dx=e.changedTouches[0].clientX-sx;
+      const dy=Math.abs(e.changedTouches[0].clientY-sy);
+      card.classList.remove('swiping');
+      card.style.transform='';
+      const callHint=card.querySelector('.swipe-call');
+      const waHint=card.querySelector('.swipe-wa');
+      if(callHint) callHint.style.opacity='0';
+      if(waHint) waHint.style.opacity='0';
+      if(dy>30) return;
+      if(dx>60){ trackContact(id,'call'); window.location.href=`tel:${ph}`; }
+      else if(dx<-60){ trackContact(id,'wa'); window.open(`https://wa.me/91${num}`,'_blank'); }
+    });
+  });
 };
 
 // DETAIL
