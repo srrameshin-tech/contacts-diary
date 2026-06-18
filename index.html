@@ -18,6 +18,12 @@
   --acc:#0ea5e9;--tea:#14b8a6;--txt:#ffffff;--tx2:#a0c4e0;--tx3:#5a80a0;
   --grn:#2dd4bf;--red:#f87171;
 }
+body.light{
+  --bg:#f0f4f8;--sur:#ffffff;--sur2:#e8eef5;--bdr:#c8d8e8;
+  --txt:#0a1628;--tx2:#3a5a7a;--tx3:#7a9ab0;
+}
+.star-btn{background:none;border:none;font-size:16px;cursor:pointer;padding:2px 4px;flex-shrink:0;line-height:1;opacity:0.4;transition:opacity .2s;}
+.star-btn.on{opacity:1;}
 *{box-sizing:border-box;margin:0;padding:0;}
 html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Inter',sans-serif;}
 .hide{display:none!important;}
@@ -220,6 +226,7 @@ textarea.fi{resize:vertical;min-height:60px;}
     <div class="tbr">
       <div class="chip"><div class="cdot"></div><span id="uname">User</span></div>
       <div class="ib" id="admBtn" onclick="openAdmin()" style="display:none">⚙️</div>
+      <div class="ib" onclick="toggleTheme()" id="themeBtn">🌙</div>
       <div class="ib" onclick="doExport()">⬇️</div>
       <div class="ib" onclick="openImport()">⬆️</div>
       <div class="ib" onclick="doLock()">🔒</div>
@@ -390,6 +397,33 @@ let curFilter="", pinBuf="", curC=null, impData=[];
 const $  = id => document.getElementById(id);
 const toast = m => { const t=$('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2200); };
 const avc = n => { const c=['#0ea5e9','#14b8a6','#6366f1','#f59e0b','#10b981','#3b82f6','#8b5cf6','#06b6d4']; let h=0; for(let x of(n||''))h=(h*31+x.charCodeAt(0))%c.length; return c[h]; };
+
+// 2-letter initials
+const ini = n => {
+  if(!n) return '?';
+  const parts = n.trim().split(/\s+/);
+  if(parts.length>=2) return (parts[0][0]+parts[1][0]).toUpperCase();
+  return n.slice(0,2).toUpperCase();
+};
+
+// Theme toggle
+window.toggleTheme = () => {
+  const isLight = document.body.classList.toggle('light');
+  localStorage.setItem('cd-theme', isLight?'light':'dark');
+  $('themeBtn').textContent = isLight?'☀️':'🌙';
+};
+// Apply saved theme on load
+(()=>{ if(localStorage.getItem('cd-theme')==='light'){ document.body.classList.add('light'); const b=$('themeBtn'); if(b) b.textContent='☀️'; } })();
+
+// Favourite toggle
+window.toggleFav = async id => {
+  const c = contacts.find(x=>x.id===id);
+  if(!c) return;
+  const newFav = !c.fav;
+  await set(ref(db,`${CP(loggedUser.id)}/${id}/fav`), newFav||null);
+  contacts = contacts.map(x=>x.id===id?{...x,fav:newFav}:x);
+  renderList();
+};
 const snap2arr = s => { const r=[]; if(s&&s.exists()) s.forEach(c=>{const v=c.val();if(v)r.push({id:c.key,...v});}); return r; };
 
 function screen(id){
@@ -552,8 +586,34 @@ window.renderList = () => {
   if(q) list=list.filter(c=>c.name.toLowerCase().includes(q)||Object.values(c.fields||{}).some(v=>String(v).toLowerCase().includes(q))||(c.category||'').toLowerCase().includes(q));
   $('stats').textContent=`${list.length} contact${list.length!==1?'s':''}`;
   if(!list.length){ $('clist').innerHTML=`<div class="empty"><div class="eic">📭</div><div class="et">No contacts</div><div>Tap + to add</div></div>`; return; }
+  // Sort: favourites first, then alphabetical
+  list = [...list].sort((a,b)=>{
+    if(a.fav && !b.fav) return -1;
+    if(!a.fav && b.fav) return 1;
+    return a.name.localeCompare(b.name);
+  });
+  const favs = list.filter(c=>c.fav);
+  const rest = list.filter(c=>!c.fav);
+  let h='';
+  if(favs.length){
+    h+=`<div class="slbl">⭐ Favourites</div>`;
+    favs.forEach(c=>{
+      const pf=fields.find(f=>f.type==='tel');
+      const ph=pf?(c.fields||{})[pf.id]||'':'';
+      const num=ph.replace(/\D/g,'');
+      const badges=ph?`
+        <a href="tel:${ph}" class="cbdg" onclick="event.stopPropagation();trackContact('${c.id}','call')" title="Call">📞</a>
+        <a href="https://wa.me/91${num}" target="_blank" class="wabdg" onclick="event.stopPropagation();trackContact('${c.id}','wa')" title="WhatsApp">💬</a>
+      `:'';
+      h+=`<div class="ccard" onclick="showD('${c.id}')">
+        <div class="cav" style="background:${avc(c.name)};color:#fff">${ini(c.name)}</div>
+        <div class="ci"><div class="cn">${c.name}</div><div class="cm">${c.category||''}${ph?' · '+ph:''}</div></div>
+        <div style="display:flex;gap:5px;flex-shrink:0;align-items:center">${badges}<button class="star-btn on" onclick="event.stopPropagation();toggleFav('${c.id}')">⭐</button></div>
+      </div>`;
+    });
+  }
   const grp={};
-  list.forEach(c=>{const l=c.name[0].toUpperCase();if(!grp[l])grp[l]=[];grp[l].push(c);});
+  rest.forEach(c=>{const l=c.name[0].toUpperCase();if(!grp[l])grp[l]=[];grp[l].push(c);});
   let h='';
   Object.keys(grp).sort().forEach(l=>{
     h+=`<div class="slbl">${l}</div>`;
@@ -566,9 +626,9 @@ window.renderList = () => {
         <a href="https://wa.me/91${num}" target="_blank" class="wabdg" onclick="event.stopPropagation();trackContact('${c.id}','wa')" title="WhatsApp">💬</a>
       `:'';
       h+=`<div class="ccard" onclick="showD('${c.id}')">
-        <div class="cav" style="background:${avc(c.name)};color:#fff">${c.name[0].toUpperCase()}</div>
+        <div class="cav" style="background:${avc(c.name)};color:#fff">${ini(c.name)}</div>
         <div class="ci"><div class="cn">${c.name}</div><div class="cm">${c.category||''}${ph?' · '+ph:''}</div></div>
-        <div style="display:flex;gap:5px;flex-shrink:0">${badges}</div>
+        <div style="display:flex;gap:5px;flex-shrink:0;align-items:center">${badges}<button class="star-btn ${c.fav?'on':''}" onclick="event.stopPropagation();toggleFav('${c.id}')">${c.fav?'⭐':'☆'}</button></div>
       </div>`;
     });
   });
@@ -588,7 +648,7 @@ window.showD = id => {
   curC=contacts.find(c=>c.id===id);
   if(!curC)return;
   const c=curC;
-  $('dav').textContent=c.name[0].toUpperCase();
+  $('dav').textContent=ini(c.name);
   $('dav').style.cssText=`background:${avc(c.name)};color:#fff;width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:700;font-family:'Space Grotesk',sans-serif;`;
   $('dnm').textContent=c.name;
   const cc=cats.find(x=>x.name===c.category);
