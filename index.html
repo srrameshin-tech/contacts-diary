@@ -664,7 +664,7 @@ window.renderList = () => {
       if(waHint) waHint.style.opacity='0';
       if(dy>30) return;
       if(dx>60){ trackContact(id,'wa'); window.open(`https://wa.me/91${num}`,'_blank'); }
-      else if(dx<-60){ trackContact(id,'call'); window.location.href=`tel:${ph}`; }
+      else if(dx<-60){ trackContact(id,'call'); const a=document.createElement('a'); a.href=`tel:${ph}`; a.click(); }
     });
   });
 };
