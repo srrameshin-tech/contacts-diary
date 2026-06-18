@@ -614,7 +614,6 @@ window.renderList = () => {
   }
   const grp={};
   rest.forEach(c=>{const l=c.name[0].toUpperCase();if(!grp[l])grp[l]=[];grp[l].push(c);});
-  let h='';
   Object.keys(grp).sort().forEach(l=>{
     h+=`<div class="slbl">${l}</div>`;
     grp[l].forEach(c=>{
