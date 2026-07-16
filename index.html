@@ -52,7 +52,7 @@ html,body{height:100%;background:var(--bg);color:var(--txt);font-family:'Inter',
 .pd{width:12px;height:12px;border-radius:50%;border:2px solid var(--bdr);transition:all .2s;}
 .pd.on{background:var(--acc);border-color:var(--acc);}
 .ppad{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;max-width:200px;margin:0 auto;}
-.pkey{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);font-size:20px;font-weight:600;padding:14px;border-radius:11px;cursor:pointer;font-family:'Space Grotesk',sans-serif;}
+.pkey{background:var(--sur2);border:1px solid var(--bdr);color:var(--txt);font-size:20px;font-weight:600;padding:14px;border-radius:11px;cursor:pointer;font-family:'Space Grotesk',sans-serif;touch-action:manipulation;-webkit-user-select:none;user-select:none;}
 .pkey:active{background:var(--acc);border-color:var(--acc);}
 .perr{color:var(--red);font-size:12px;margin-top:9px;min-height:16px;text-align:center;}
 /* TOPBAR */
@@ -399,6 +399,18 @@ function CP(uid){ return `${P}/user_contacts/${uid}`; }
 // STATE
 let contacts=[], users=[], cats=[], fields=[];
 let adminPin="1234", loggedUser=null, selUser=null;
+// PIN hashing (SHA-256) — auto-migrates legacy plaintext PINs on next successful use
+async function sha256Hex(str){
+  const enc = new TextEncoder().encode(str);
+  const buf = await crypto.subtle.digest('SHA-256', enc);
+  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+function isHashFormat(str){ return typeof str==='string' && /^[a-f0-9]{64}$/i.test(str); }
+async function verifyPin(entered, stored){
+  if(!stored) return false;
+  if(isHashFormat(stored)) return (await sha256Hex(entered))===stored;
+  return entered===stored;
+}
 let curFilter="", pinBuf="", curC=null, impData=[];
 
 // HELPERS
@@ -510,13 +522,35 @@ window.backToUsers = () => {
   selUser=null; pinBuf=''; updDots();
 };
 
+// Instant tap response on mobile: touchend fires immediately, avoiding the
+// browser's delayed/occasionally-missed synthetic click on rapid taps.
+document.querySelectorAll('.pkey').forEach(btn=>{
+  let touched=false;
+  const origOnclick = btn.onclick;
+  btn.addEventListener('touchend', e=>{
+    touched=true;
+    e.preventDefault();
+    origOnclick && origOnclick.call(btn);
+    setTimeout(()=>{ touched=false; }, 400);
+  });
+  btn.onclick = function(){
+    if(touched) return;
+    origOnclick && origOnclick.call(btn);
+  };
+});
+
 window.pp = d => {
   if(pinBuf.length>=4)return;
   pinBuf+=d; updDots();
   if(pinBuf.length===4){
-    setTimeout(()=>{
+    setTimeout(async ()=>{
       const ok=selUser.isAdmin?adminPin:(selUser.pin||'0000');
-      if(pinBuf===ok){
+      if(await verifyPin(pinBuf, ok)){
+        if(!isHashFormat(ok)){
+          const hashed = await sha256Hex(pinBuf);
+          if(selUser.isAdmin){ adminPin=hashed; set(ref(db,`${P}/settings/adminPin`),hashed); }
+          else { await update(ref(db,`${P}/users/${selUser.id}`),{pin:hashed}); }
+        }
         loggedUser=selUser;
         if(!selUser.isAdmin) update(ref(db,`${P}/users/${selUser.id}`),{lastLogin:Date.now()});
         enterApp();
@@ -827,8 +861,9 @@ window.closeAdmin = () => { renderCbar(); screen('mainApp'); };
 window.savePin = async () => {
   const p=$('newPin').value.trim();
   if(p.length!==4||!/^\d{4}$/.test(p)){toast('⚠️ 4 digits');return;}
-  await set(ref(db,`${P}/settings/adminPin`),p);
-  adminPin=p; $('newPin').value=''; toast('✅ PIN changed!');
+  const hashed = await sha256Hex(p);
+  await set(ref(db,`${P}/settings/adminPin`),hashed);
+  adminPin=hashed; $('newPin').value=''; toast('✅ PIN changed!');
 };
 
 function renderAdm(){ renderAdmUsers(); renderAdmCats(); renderAdmFlds(); }
@@ -857,11 +892,11 @@ window.saveU = async () => {
   const name=$('newUN').value.trim(),pin=$('newUP').value.trim(),id=$('editUID').value;
   if(!name){toast('⚠️ Name required');return;}
   if(!id&&(pin.length!==4||!/^\d{4}$/.test(pin))){toast('⚠️ 4-digit PIN');return;}
-  if(id){const upd={name};if(pin.length===4)upd.pin=pin;await update(ref(db,`${P}/users/${id}`),upd);users=users.map(u=>u.id===id?{...u,...upd}:u);}
-  else{const r=await push(ref(db,`${P}/users`),{name,pin,enabled:true,createdAt:Date.now()});users.push({id:r.key,name,pin,enabled:true});}
+  if(id){const upd={name};if(pin.length===4)upd.pin=await sha256Hex(pin);await update(ref(db,`${P}/users/${id}`),upd);users=users.map(u=>u.id===id?{...u,...upd}:u);}
+  else{const hashedPin=await sha256Hex(pin);const r=await push(ref(db,`${P}/users`),{name,pin:hashedPin,enabled:true,createdAt:Date.now()});users.push({id:r.key,name,pin:hashedPin,enabled:true});}
   closeAddU();renderAdmUsers();toast('✅ User saved!');
 };
-window.rstPin = async id => {const p=prompt('New 4-digit PIN:');if(!p||p.length!==4||!/^\d{4}$/.test(p)){toast('⚠️ Invalid');return;}await update(ref(db,`${P}/users/${id}`),{pin:p});users=users.map(u=>u.id===id?{...u,pin:p}:u);toast('🔑 Reset!');};
+window.rstPin = async id => {const p=prompt('New 4-digit PIN:');if(!p||p.length!==4||!/^\d{4}$/.test(p)){toast('⚠️ Invalid');return;}const hashed=await sha256Hex(p);await update(ref(db,`${P}/users/${id}`),{pin:hashed});users=users.map(u=>u.id===id?{...u,pin:hashed}:u);toast('🔑 Reset!');};
 window.togU = async (id,on) => {await update(ref(db,`${P}/users/${id}`),{enabled:!on});users=users.map(u=>u.id===id?{...u,enabled:!on}:u);renderAdmUsers();toast(on?'🚫 Disabled':'✅ Enabled');};
 window.rmU = async id => {const u=users.find(x=>x.id===id);if(!confirm(`Remove "${u?.name}"?`))return;await remove(ref(db,`${P}/users/${id}`));users=users.filter(x=>x.id!==id);renderAdmUsers();toast('🗑️ Removed');};
 
