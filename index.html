@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="app-build" content="20260813-0900">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Contact Diary</title>
 <link rel="manifest" href="manifest.json">
@@ -154,6 +155,27 @@ textarea.fi{resize:vertical;min-height:60px;}
 .abk{background:none;border:none;color:var(--tx2);cursor:pointer;font-size:18px;padding:3px;}
 .atit{font-family:'Space Grotesk',sans-serif;font-size:16px;font-weight:700;}
 .abdy{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;padding:16px;padding-bottom:80px;}
+.lform{display:flex;flex-direction:column;gap:11px;text-align:left;margin-top:14px;}
+.lform input{width:100%;padding:14px 15px;border-radius:11px;font-size:16px;
+  background:var(--bg2);color:var(--tx1);border:1px solid var(--bdr);}
+.lform input:focus{outline:none;border-color:var(--acc);}
+.lbtn{width:100%;padding:14px;border-radius:11px;border:none;background:var(--acc);
+  color:#fff;font-size:16px;font-weight:700;cursor:pointer;}
+.lbtn:disabled{opacity:.6;}
+.llink{background:none;border:none;color:var(--acc);font-size:14px;font-weight:600;
+  padding:8px;text-decoration:underline;cursor:pointer;}
+.lmsg{min-height:20px;font-size:13.5px;line-height:1.45;text-align:center;color:var(--red);margin:0;}
+.lmsg.ok{color:var(--grn);}
+.ptitle{font-size:19px;font-weight:800;color:var(--acc);margin:0 0 8px;text-align:center;}
+.ptext{font-size:14px;color:var(--tx3);line-height:1.55;margin:0;text-align:center;}
+.mrow{display:flex;align-items:center;gap:9px;padding:11px 0;border-bottom:1px solid var(--bdr);flex-wrap:wrap;}
+.mrow:last-child{border-bottom:none;}
+.mnm{flex:1;min-width:130px;font-size:15px;font-weight:700;}
+.msub2{display:block;color:var(--tx3);font-size:12px;font-weight:500;word-break:break-all;}
+.mpill{font-size:12px;font-weight:700;padding:6px 11px;border-radius:999px;border:none;
+  background:var(--acc);color:#fff;cursor:pointer;}
+.mpill.wait{background:transparent;color:var(--acc);border:1px solid var(--acc);}
+.mpill.no{background:transparent;color:var(--red);border:1px solid var(--red);}
 .asec{font-size:11px;font-weight:600;color:var(--tx3);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;margin-top:18px;}
 .asec:first-child{margin-top:0;}
 .row{background:var(--sur);border:1px solid var(--bdr);border-radius:12px;padding:12px;margin-bottom:8px;display:flex;align-items:center;gap:10px;}
@@ -193,30 +215,23 @@ textarea.fi{resize:vertical;min-height:60px;}
   <div class="lcard">
     <div class="lic">📒</div>
     <div class="ltit">Contact Diary</div>
-    <div class="lsub" id="lsub">Select your profile</div>
-    <div id="ulist" class="ulist"></div>
-    <div id="pinw" class="pinw">
-      <button class="pbk" onclick="backToUsers()">← Back</button>
-      <div class="pwho" id="pwho"></div>
-      <div class="pdots">
-        <div class="pd" id="pd0"></div><div class="pd" id="pd1"></div>
-        <div class="pd" id="pd2"></div><div class="pd" id="pd3"></div>
-      </div>
-      <div class="ppad">
-        <button class="pkey" onclick="pp('1')">1</button>
-        <button class="pkey" onclick="pp('2')">2</button>
-        <button class="pkey" onclick="pp('3')">3</button>
-        <button class="pkey" onclick="pp('4')">4</button>
-        <button class="pkey" onclick="pp('5')">5</button>
-        <button class="pkey" onclick="pp('6')">6</button>
-        <button class="pkey" onclick="pp('7')">7</button>
-        <button class="pkey" onclick="pp('8')">8</button>
-        <button class="pkey" onclick="pp('9')">9</button>
-        <button class="pkey" style="opacity:0;pointer-events:none"></button>
-        <button class="pkey" onclick="pp('0')">0</button>
-        <button class="pkey" onclick="pdel()">⌫</button>
-      </div>
-      <div class="perr" id="perr"></div>
+    <div class="lsub" id="lsub">Sign in to continue</div>
+
+    <div class="lform" id="loginForm">
+      <input type="email" id="loginEmail" placeholder="Email" inputmode="email"
+             autocomplete="username" autocapitalize="none" spellcheck="false">
+      <input type="password" id="loginPassword" placeholder="Password" autocomplete="current-password">
+      <input type="text" id="signupName" placeholder="Your name" autocomplete="name" style="display:none;">
+      <button class="lbtn" id="loginBtn">Sign in</button>
+      <p class="lmsg" id="loginMsg"></p>
+      <button class="llink" id="toggleSignupBtn">New here? Create an account</button>
+      <button class="llink" id="forgotBtn">Forgot password</button>
+    </div>
+
+    <div class="lform" id="pendingBox" style="display:none;">
+      <p class="ptitle">Waiting to be let in</p>
+      <p class="ptext">Ramesh has to approve this account. Open Contact Diary again after that.</p>
+      <button class="llink" id="pendingSignOutBtn">Use a different account</button>
     </div>
   </div>
 </div>
@@ -257,17 +272,20 @@ textarea.fi{resize:vertical;min-height:60px;}
     <div class="atit">⚙️ Settings</div>
   </div>
   <div class="abdy">
-    <div class="asec" style="margin-top:0">👑 Admin PIN</div>
+    <div class="asec" style="margin-top:0">👤 My account</div>
     <div class="pcard">
-      <div style="font-size:13px;font-weight:600;margin-bottom:9px;">🔑 Change PIN</div>
-      <div class="pinrow">
-        <input class="pinfi" id="newPin" type="password" maxlength="4" placeholder="····" inputmode="numeric">
-        <button class="pinsv" onclick="savePin()">Save</button>
+      <div style="font-size:13px;font-weight:600;margin-bottom:4px;" id="myEmailLine"></div>
+      <div style="font-size:12px;color:var(--tx3);margin-bottom:10px;">
+        Password change happens by email, so nobody can change it from a phone left unlocked.
       </div>
+      <button class="lbtn" id="pwResetBtn" style="font-size:14px;padding:11px;">Email me a password reset link</button>
+      <p class="lmsg" id="pwMsg" style="text-align:left;margin-top:8px;"></p>
     </div>
-    <div class="asec">👥 Users <span id="ucnt" style="color:var(--grn);font-weight:700;"></span></div>
+    <div class="asec">👥 People <span id="ucnt" style="color:var(--grn);font-weight:700;"></span></div>
     <div id="uadmlist"></div>
-    <div class="addrow" onclick="openAddU()">➕ Add New User</div>
+    <div style="font-size:12px;color:var(--tx3);margin:8px 0 4px;line-height:1.5;">
+      People sign up in the app themselves. New ones wait here until you approve them.
+    </div>
     <div class="asec">🏷️ Categories <span id="ccnt" style="color:var(--grn);font-weight:700;"></span></div>
     <div id="cadmlist"></div>
     <div class="addrow" onclick="openAddCat()">➕ Add New Category</div>
@@ -305,19 +323,6 @@ textarea.fi{resize:vertical;min-height:60px;}
       <button class="sbtn" onclick="saveC()">💾 Save</button>
       <button class="cbtn" onclick="document.getElementById('formOv').classList.remove('on')">Cancel</button>
     </div>
-  </div>
-</div>
-
-<!-- ADD USER OV -->
-<div class="mov" id="addUOv">
-  <div class="mbox">
-    <div class="mtit" id="addUtit">➕ Add User</div>
-    <div class="msub">Name + 4-digit PIN</div>
-    <input type="hidden" id="editUID">
-    <div class="fg"><label class="fl">Name</label><input class="fi" id="newUN" placeholder="Name"></div>
-    <div class="fg" style="margin-top:9px"><label class="fl">PIN</label>
-      <input class="fi" id="newUP" type="password" maxlength="4" placeholder="····" inputmode="numeric" style="letter-spacing:5px;font-size:20px;text-align:center;"></div>
-    <div class="mbtns"><button class="mb s" onclick="closeAddU()">Cancel</button><button class="mb p" onclick="saveU()">Save</button></div>
   </div>
 </div>
 
@@ -379,6 +384,9 @@ textarea.fi{resize:vertical;min-height:60px;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
 import { getDatabase, ref, push, set, get, remove, update, onValue } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+import { getAuth, signInWithEmailAndPassword, createUserWithEmailAndPassword,
+         onAuthStateChanged, signOut, sendPasswordResetEmail }
+  from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
 
 const FC = {
   apiKey:"AIzaSyBVGVu59jDZybPFAX_pRisSrQRoXHQ0EWY",
@@ -392,6 +400,7 @@ const FC = {
 
 const app = initializeApp(FC);
 const db  = getDatabase(app);
+const auth = getAuth(app);
 const P   = "contact_diary";
 // Get user-specific contacts path
 function CP(uid){ return `${P}/user_contacts/${uid}`; }
@@ -463,20 +472,8 @@ function showAutoCheckPopup(entries){
 
 // STATE
 let contacts=[], users=[], cats=[], fields=[];
-let adminPin="1234", loggedUser=null, selUser=null;
-// PIN hashing (SHA-256) — auto-migrates legacy plaintext PINs on next successful use
-async function sha256Hex(str){
-  const enc = new TextEncoder().encode(str);
-  const buf = await crypto.subtle.digest('SHA-256', enc);
-  return Array.from(new Uint8Array(buf)).map(b=>b.toString(16).padStart(2,'0')).join('');
-}
-function isHashFormat(str){ return typeof str==='string' && /^[a-f0-9]{64}$/i.test(str); }
-async function verifyPin(entered, stored){
-  if(!stored) return false;
-  if(isHashFormat(stored)) return (await sha256Hex(entered))===stored;
-  return entered===stored;
-}
-let curFilter="", pinBuf="", curC=null, impData=[];
+let loggedUser=null;
+let curFilter="", curC=null, impData=[];
 
 // HELPERS
 const $  = id => document.getElementById(id);
@@ -505,7 +502,7 @@ window.toggleFav = async id => {
   const c = contacts.find(x=>x.id===id);
   if(!c) return;
   const newFav = !c.fav;
-  await set(ref(db,`${CP(loggedUser.id)}/${id}/fav`), newFav||null);
+  await set(ref(db,`${CP(loggedUser.contactsKey)}/${id}/fav`), newFav||null);
   contacts = contacts.map(x=>x.id===id?{...x,fav:newFav}:x);
   renderList();
 };
@@ -518,135 +515,243 @@ function screen(id){
 
 // INIT — use onValue for real-time, guaranteed load
 async function init(){
-  // Load settings
-  onValue(ref(db,`${P}/settings`), s=>{
-    if(s.exists()&&s.val()&&s.val().adminPin) adminPin=s.val().adminPin;
-  });
+  // contacts loaded after login (user-specific)
+  contacts = [];
+  watchAuth();
+}
 
-  // Load users once
-  const uSnap = await get(ref(db,`${P}/users`));
-  users = snap2arr(uSnap);
+// Categories and fields are shared, but the database will not hand them over
+// without an approved member behind the request. Subscribing at start-up meant
+// the very first read was refused, and a refused listener never retries — the
+// category bar would have sat empty for good. So this starts after login.
+let dataWatched = false;
+function watchSharedData(){
+  if(dataWatched) return;
+  dataWatched = true;
 
-  // Real-time listeners for cats & fields
   onValue(ref(db,`${P}/categories`), s=>{
     cats = snap2arr(s);
     if(loggedUser){
       renderCbar();
       renderAdmCats();
     }
-  });
+  }, err => console.error('Contact Diary: categories read failed', err));
 
   onValue(ref(db,`${P}/fields`), s=>{
     fields = snap2arr(s).sort((a,b)=>(a.order||0)-(b.order||0));
     if(loggedUser){
       renderAdmFlds();
     }
-  });
-
-  // contacts loaded after login (user-specific)
-  contacts = [];
-
-  renderLoginUsers();
-  screen('loginScreen');
+  }, err => console.error('Contact Diary: fields read failed', err));
 }
 
 // LOGIN
-function renderLoginUsers(){
-  let h=`<button class="ubtn" onclick="selU('__admin__')">
-    <div class="uav" style="background:linear-gradient(135deg,#0ea5e9,#14b8a6);color:#fff">R</div>
-    <div><div class="unm">Ramesh</div><div class="url2">Admin</div></div>
-    <span class="ubdg">👑</span>
-  </button>`;
-  users.filter(u=>u.enabled!==false).forEach(u=>{
-    h+=`<button class="ubtn" onclick="selU('${u.id}')">
-      <div class="uav" style="background:${avc(u.name)};color:#fff">${u.name[0].toUpperCase()}</div>
-      <div><div class="unm">${u.name}</div><div class="url2">${u.role||'Member'}</div></div>
-    </button>`;
-  });
-  $('ulist').innerHTML=h;
-  $('ulist').style.display='flex';
-  $('pinw').style.display='none';
-  $('lsub').textContent='Select your profile';
+// The old gate was a profile picker plus a 4-digit PIN, and the database had
+// no authentication at all — the rules let anyone with the URL read, change or
+// delete every contact. Logging in now produces a real Firebase token, and the
+// rules only let approved members through.
+let signupMode = false;
+
+function loginMsg(text, good){
+  const el = $('loginMsg');
+  if(!el) return;
+  el.textContent = text || '';
+  el.classList.toggle('ok', !!good);
 }
 
-window.selU = id => {
-  selUser = id==='__admin__'?{id:'__admin__',name:'Ramesh',isAdmin:true}:users.find(u=>u.id===id);
-  if(!selUser)return;
-  pinBuf=''; updDots();
-  $('pwho').innerHTML=`Login as <strong>${selUser.name}</strong>`;
-  $('ulist').style.display='none';
-  $('pinw').style.display='block';
-  $('lsub').textContent='Enter PIN';
-  $('perr').textContent='';
-};
+function setSignupMode(on){
+  signupMode = on;
+  $('signupName').style.display = on ? 'block' : 'none';
+  $('loginPassword').setAttribute('autocomplete', on ? 'new-password' : 'current-password');
+  $('loginBtn').textContent = on ? 'Create account' : 'Sign in';
+  $('toggleSignupBtn').textContent = on ? 'Already signed up? Sign in' : 'New here? Create an account';
+  $('lsub').textContent = on ? 'Create your account' : 'Sign in to continue';
+  $('forgotBtn').style.display = on ? 'none' : 'block';
+  loginMsg('');
+}
 
-window.backToUsers = () => {
-  $('ulist').style.display='flex';
-  $('pinw').style.display='none';
-  $('lsub').textContent='Select your profile';
-  selUser=null; pinBuf=''; updDots();
-};
+// Firebase error codes are not for reading. Turn them into something calm.
+function friendlyAuthMessage(code){
+  switch(code){
+    case 'auth/invalid-email':          return 'That email does not look right.';
+    case 'auth/missing-password':       return 'Type your password.';
+    case 'auth/weak-password':          return 'Password needs at least 6 characters.';
+    case 'auth/email-already-in-use':   return 'That email already has an account. Sign in instead.';
+    case 'auth/invalid-credential':
+    case 'auth/wrong-password':
+    case 'auth/user-not-found':         return 'Email or password is wrong.';
+    case 'auth/too-many-requests':      return 'Too many tries. Wait a minute and try again.';
+    case 'auth/network-request-failed': return 'No connection. Check the network and try again.';
+    case 'auth/operation-not-allowed':  return 'Email sign-in is not switched on for this app yet.';
+    default:                            return 'Could not sign in. Try again in a moment.';
+  }
+}
 
-// Instant tap response on mobile: touchend fires immediately, avoiding the
-// browser's delayed/occasionally-missed synthetic click on rapid taps.
-document.querySelectorAll('.pkey').forEach(btn=>{
-  let touched=false;
-  const origOnclick = btn.onclick;
-  btn.addEventListener('touchend', e=>{
-    touched=true;
-    e.preventDefault();
-    origOnclick && origOnclick.call(btn);
-    setTimeout(()=>{ touched=false; }, 400);
-  });
-  btn.onclick = function(){
-    if(touched) return;
-    origOnclick && origOnclick.call(btn);
+// The first person to sign up runs the diary, so they come straight in as the
+// admin and keep the contacts already stored under __admin__ — nothing moves.
+// Everyone after them lands as pending. The rules decide this, not the app: we
+// ask for admin and settle for pending if the rules refuse.
+async function claimMembership(user, name){
+  const base = {
+    name: name || (user.email || '').split('@')[0],
+    email: user.email,
+    created: Date.now()
   };
+  const path = `${P}/members/${user.uid}`;
+  try{
+    await set(ref(db, path),
+      Object.assign({}, base, { role:'admin', status:'approved', contactsKey:'__admin__' }));
+  }catch(e){
+    console.log('Contact Diary: not the first member, joining as pending');
+    await set(ref(db, path),
+      Object.assign({}, base, { role:'member', status:'pending', contactsKey:user.uid }));
+  }
+}
+
+let loginBusy = false;
+async function doLogin(){
+  if(loginBusy) return;
+  const email    = $('loginEmail').value.trim();
+  const password = $('loginPassword').value;
+  const name     = $('signupName').value.trim();
+
+  if(!email){    loginMsg('Type your email.'); return; }
+  if(!password){ loginMsg('Type your password.'); return; }
+  if(signupMode && !name){ loginMsg('Type your name.'); return; }
+
+  const btn = $('loginBtn');
+  const label = btn.textContent;
+  loginBusy = true;
+  btn.disabled = true;
+  btn.textContent = 'One moment…';
+  loginMsg('');
+  try{
+    if(signupMode){
+      const cred = await createUserWithEmailAndPassword(auth, email, password);
+      await claimMembership(cred.user, name);
+    } else {
+      await signInWithEmailAndPassword(auth, email, password);
+    }
+    $('loginPassword').value = '';
+  }catch(e){
+    console.error('Contact Diary: sign-in failed', e);
+    loginMsg(friendlyAuthMessage(e && e.code));
+  }finally{
+    loginBusy = false;
+    btn.disabled = false;
+    btn.textContent = label;
+  }
+}
+
+$('loginBtn').addEventListener('click', doLogin);
+$('toggleSignupBtn').addEventListener('click', ()=> setSignupMode(!signupMode));
+['loginEmail','loginPassword','signupName'].forEach(id=>{
+  $(id).addEventListener('keydown', e=>{ if(e.key === 'Enter') doLogin(); });
+});
+$('pendingSignOutBtn').addEventListener('click', ()=> signOut(auth));
+$('forgotBtn').addEventListener('click', async ()=>{
+  const email = $('loginEmail').value.trim();
+  if(!email){ loginMsg('Type your email first, then tap this.'); return; }
+  try{
+    await sendPasswordResetEmail(auth, email);
+    loginMsg('Reset link sent. Check that inbox.', true);
+  }catch(e){
+    console.error('Contact Diary: reset failed', e);
+    loginMsg(friendlyAuthMessage(e && e.code));
+  }
 });
 
-window.pp = d => {
-  if(pinBuf.length>=4)return;
-  pinBuf+=d; updDots();
-  if(pinBuf.length===4){
-    setTimeout(async ()=>{
-      const ok=selUser.isAdmin?adminPin:(selUser.pin||'0000');
-      if(await verifyPin(pinBuf, ok)){
-        if(!isHashFormat(ok)){
-          const hashed = await sha256Hex(pinBuf);
-          if(selUser.isAdmin){ adminPin=hashed; set(ref(db,`${P}/settings/adminPin`),hashed); }
-          else { await update(ref(db,`${P}/users/${selUser.id}`),{pin:hashed}); }
-        }
-        loggedUser=selUser;
-        if(!selUser.isAdmin) update(ref(db,`${P}/users/${selUser.id}`),{lastLogin:Date.now()});
-        enterApp();
-      } else {
-        $('perr').textContent='Wrong PIN';
-        pinBuf=''; updDots();
-        setTimeout(()=>$('perr').textContent='',1600);
-      }
-    },120);
-  }
-};
-window.pdel = () => { pinBuf=pinBuf.slice(0,-1); updDots(); };
-function updDots(){ for(let i=0;i<4;i++) $(`pd${i}`).classList.toggle('on',i<pinBuf.length); }
+function showLogin(){
+  loggedUser = null;
+  $('loginForm').style.display = 'flex';
+  $('pendingBox').style.display = 'none';
+  screen('loginScreen');
+}
+function showPending(){
+  loggedUser = null;
+  $('loginForm').style.display = 'none';
+  $('pendingBox').style.display = 'flex';
+  screen('loginScreen');
+}
 
+// Firebase keeps the session on the device, so this runs on every open and
+// nobody has to type anything again. Watching our own member record means an
+// approval takes effect the moment it happens, with no reload.
+let memberUnsub = null;
+function watchAuth(){
+  onAuthStateChanged(auth, (user)=>{
+    if(memberUnsub){ memberUnsub(); memberUnsub = null; }
+    if(!user){ showLogin(); return; }
+
+    memberUnsub = onValue(ref(db, `${P}/members/${user.uid}`), (snap)=>{
+      const m = snap.val();
+      if(m && m.status === 'approved'){
+        loggedUser = {
+          id: user.uid,
+          name: m.name,
+          email: m.email,
+          isAdmin: m.role === 'admin',
+          contactsKey: m.contactsKey || user.uid
+        };
+        enterApp();
+        if(loggedUser.isAdmin) watchMembers();
+      } else {
+        showPending();
+      }
+    }, (err)=>{
+      console.error('Contact Diary: could not read membership', err);
+      showPending();
+    });
+  });
+}
+
+// Only an admin may read the whole member list, so this is subscribed once we
+// know the role. The old users node held PINs; it is cleared out here so it
+// stops sitting in the database.
+let membersWatched = false;
+function watchMembers(){
+  if(membersWatched) return;
+  membersWatched = true;
+  onValue(ref(db, `${P}/members`), (snap)=>{
+    users = snap2arr(snap);
+    if($('uadmlist')) renderAdmUsers();
+  }, (err)=> console.error('Contact Diary: member list read failed', err));
+
+  get(ref(db, `${P}/users`))
+    .then(s => s.exists() ? remove(ref(db, `${P}/users`)) : null)
+    .then(d => { if(d !== null) console.log('Contact Diary: removed the old PIN list'); })
+    .catch(e => console.log('Contact Diary: old PIN list not removed', e && e.code));
+
+  get(ref(db, `${P}/settings/adminPin`))
+    .then(s => s.exists() ? remove(ref(db, `${P}/settings/adminPin`)) : null)
+    .catch(()=>{});
+}
+
+let appStarted = false;
 async function enterApp(){
   screen('mainApp');
   $('uname').textContent=loggedUser.name;
   $('admBtn').style.display=loggedUser.isAdmin?'flex':'none';
+  // The member record is watched live, so this can fire again mid-session when
+  // a role changes. Only the role UI should redo itself; reloading the list
+  // would throw away whatever the person was looking at.
+  if(appStarted) return;
+  appStarted = true;
+  watchSharedData();
   if(loggedUser.isAdmin) runAutoCheckDigest();
   // Load this user's contacts
   $('clist').innerHTML='<div class="loading"><div class="spin"></div>Loading...</div>';
-  const cSnap = await get(ref(db, CP(loggedUser.id)));
+  const cSnap = await get(ref(db, CP(loggedUser.contactsKey)));
   contacts = snap2arr(cSnap).filter(x=>x.name).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   renderCbar();
   renderList();
 }
 
-window.doLock = () => {
-  loggedUser=null; selUser=null; pinBuf=''; updDots();
-  renderLoginUsers();
-  screen('loginScreen');
+window.doLock = async () => {
+  appStarted = false;
+  loggedUser = null;
+  try{ await signOut(auth); }catch(e){ console.error('Contact Diary: sign-out failed', e); }
+  showLogin();
 };
 
 // RENDER LIST
@@ -781,7 +886,7 @@ window.renderList = () => {
 window.trackContact = async (id, type) => {
   const now = Date.now();
   const label = type==='call'?'📞 Called':'💬 WhatsApp';
-  await set(ref(db,`${CP(loggedUser.id)}/${id}/lastContact`),{type,label,time:now});
+  await set(ref(db,`${CP(loggedUser.contactsKey)}/${id}/lastContact`),{type,label,time:now});
   contacts = contacts.map(c=>c.id===id?{...c,lastContact:{type,label,time:now}}:c);
 };
 
@@ -867,11 +972,11 @@ window.saveC = async () => {
   const data={name,category:$('fcat').value,fields:flds,updatedAt:Date.now(),updatedBy:loggedUser.name};
   const id=$('fid').value;
   if(id){
-    await set(ref(db,`${CP(loggedUser.id)}/${id}`),data);
+    await set(ref(db,`${CP(loggedUser.contactsKey)}/${id}`),data);
     contacts=contacts.map(c=>c.id===id?{id,...data}:c);
   } else {
     data.createdAt=Date.now();
-    const r=await push(ref(db,CP(loggedUser.id)),data);
+    const r=await push(ref(db,CP(loggedUser.contactsKey)),data);
     contacts.push({id:r.key,...data});
     contacts.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   }
@@ -880,7 +985,7 @@ window.saveC = async () => {
 };
 window.delC = async () => {
   if(!curC||!confirm(`Delete "${curC.name}"?`))return;
-  await remove(ref(db,`${CP(loggedUser.id)}/${curC.id}`));
+  await remove(ref(db,`${CP(loggedUser.contactsKey)}/${curC.id}`));
   contacts=contacts.filter(c=>c.id!==curC.id);
   $('detOv').classList.remove('on');
   renderList(); toast('🗑️ Deleted');
@@ -913,7 +1018,7 @@ window.doImport = async () => {
     const nm=c.Name||c.name||'';if(!nm)continue;
     const flds={};const pf=fields.find(f=>f.type==='tel');
     if(pf&&(c.Phone||c.phone))flds[pf.id]=c.Phone||c.phone;
-    const r=await push(ref(db,CP(loggedUser.id)),{name:nm,category:'',fields:flds,createdAt:Date.now(),updatedBy:'Import'});
+    const r=await push(ref(db,CP(loggedUser.contactsKey)),{name:nm,category:'',fields:flds,createdAt:Date.now(),updatedBy:'Import'});
     contacts.push({id:r.key,name:nm,category:'',fields:flds});
     n++;
   }
@@ -924,47 +1029,87 @@ window.doImport = async () => {
 // ADMIN
 window.openAdmin = () => { renderAdm(); screen('adminScreen'); };
 window.closeAdmin = () => { renderCbar(); screen('mainApp'); };
-window.savePin = async () => {
-  const p=$('newPin').value.trim();
-  if(p.length!==4||!/^\d{4}$/.test(p)){toast('⚠️ 4 digits');return;}
-  const hashed = await sha256Hex(p);
-  await set(ref(db,`${P}/settings/adminPin`),hashed);
-  adminPin=hashed; $('newPin').value=''; toast('✅ PIN changed!');
-};
+$('pwResetBtn').addEventListener('click', async ()=>{
+  const el = $('pwMsg');
+  const email = loggedUser && loggedUser.email;
+  if(!email){ el.textContent='Not signed in.'; return; }
+  try{
+    await sendPasswordResetEmail(auth, email);
+    el.textContent = 'Reset link sent to ' + email;
+    el.classList.add('ok');
+  }catch(e){
+    console.error('Contact Diary: reset failed', e);
+    el.classList.remove('ok');
+    el.textContent = 'Could not send the link just now. Try again in a moment.';
+  }
+});
 
 function renderAdm(){ renderAdmUsers(); renderAdmCats(); renderAdmFlds(); }
 
-// USERS
+// PEOPLE
 function renderAdmUsers(){
-  $('ucnt').textContent=`${users.filter(u=>u.enabled!==false).length} active`;
-  $('uadmlist').innerHTML=users.length?users.map(u=>{
-    const on=u.enabled!==false;
-    const last=u.lastLogin?new Date(u.lastLogin).toLocaleString('en-IN',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'}):'Never';
-    return `<div class="row"><div class="sdot ${on?'on':'off'}"></div>
-      <div class="rav" style="background:${avc(u.name)};color:#fff">${u.name[0].toUpperCase()}</div>
-      <div class="ri"><div class="rn">${u.name}${!on?'<span style="font-size:10px;color:var(--red);margin-left:5px">Off</span>':''}</div><div class="rm">Last: ${last}</div></div>
-      <div class="racts">
-        <button class="rb" onclick="openEditU('${u.id}')">✏️</button>
-        <button class="rb" onclick="rstPin('${u.id}')">🔑</button>
-        <button class="rb" onclick="togU('${u.id}',${on})">${on?'🚫':'✅'}</button>
-        <button class="rb d" onclick="rmU('${u.id}')">🗑️</button>
-      </div></div>`;
-  }).join(''):'<div style="color:var(--tx3);font-size:13px;padding:6px 0">No users yet.</div>';
+  if($('myEmailLine') && loggedUser) $('myEmailLine').textContent = loggedUser.email || '';
+
+  const pending = users.filter(u=>u.status==='pending').length;
+  $('ucnt').textContent = pending ? `${pending} waiting` : `${users.length} total`;
+
+  if(!users.length){
+    $('uadmlist').innerHTML = '<div style="font-size:13px;color:var(--tx3)">Nobody has signed up yet.</div>';
+    return;
+  }
+
+  // People still waiting go on top, because they are the ones needing an answer.
+  const sorted = users.slice().sort((a,b)=>{
+    const wa = a.status==='pending'?0:1, wb = b.status==='pending'?0:1;
+    return wa!==wb ? wa-wb : (a.name||'').localeCompare(b.name||'');
+  });
+
+  $('uadmlist').innerHTML = sorted.map(u=>{
+    const mark = u.status==='pending' ? '⏳' : (u.role==='admin' ? '👑' : '🙂');
+    const me   = u.id === (loggedUser && loggedUser.id);
+    let btns = '';
+    if(u.status==='pending'){
+      btns = `<button class="mpill" onclick="apprM('${u.id}')">Approve</button>
+              <button class="mpill no" onclick="rmM('${u.id}')">Remove</button>`;
+    } else if(!me && u.role!=='admin'){
+      btns = `<button class="mpill wait" onclick="admM('${u.id}')">Make admin</button>
+              <button class="mpill no" onclick="rmM('${u.id}')">Remove</button>`;
+    } else if(!me){
+      btns = `<button class="mpill no" onclick="rmM('${u.id}')">Remove</button>`;
+    }
+    return `<div class="mrow">
+      <span class="mnm">${mark} ${u.name||'Someone'}<span class="msub2">${u.email||''}</span></span>
+      ${btns}</div>`;
+  }).join('');
 }
-window.openAddU = () => {$('addUtit').textContent='➕ Add User';$('editUID').value='';$('newUN').value='';$('newUP').value='';$('addUOv').classList.add('on');};
-window.openEditU = id => {const u=users.find(x=>x.id===id);if(!u)return;$('addUtit').textContent='✏️ Edit User';$('editUID').value=id;$('newUN').value=u.name;$('newUP').value='';$('addUOv').classList.add('on');};
-window.closeAddU = () => $('addUOv').classList.remove('on');
-window.saveU = async () => {
-  const name=$('newUN').value.trim(),pin=$('newUP').value.trim(),id=$('editUID').value;
-  if(!name){toast('⚠️ Name required');return;}
-  if(!id&&(pin.length!==4||!/^\d{4}$/.test(pin))){toast('⚠️ 4-digit PIN');return;}
-  if(id){const upd={name};if(pin.length===4)upd.pin=await sha256Hex(pin);await update(ref(db,`${P}/users/${id}`),upd);users=users.map(u=>u.id===id?{...u,...upd}:u);}
-  else{const hashedPin=await sha256Hex(pin);const r=await push(ref(db,`${P}/users`),{name,pin:hashedPin,enabled:true,createdAt:Date.now()});users.push({id:r.key,name,pin:hashedPin,enabled:true});}
-  closeAddU();renderAdmUsers();toast('✅ User saved!');
+
+window.apprM = async id => {
+  const u = users.find(x=>x.id===id);
+  try{
+    await update(ref(db,`${P}/members/${id}`), { status:'approved' });
+    toast(`✅ ${u?u.name:'They'} can come in now`);
+  }catch(e){ console.error('Contact Diary: approve failed', e); toast('⚠️ Could not save that'); }
 };
-window.rstPin = async id => {const p=prompt('New 4-digit PIN:');if(!p||p.length!==4||!/^\d{4}$/.test(p)){toast('⚠️ Invalid');return;}const hashed=await sha256Hex(p);await update(ref(db,`${P}/users/${id}`),{pin:hashed});users=users.map(u=>u.id===id?{...u,pin:hashed}:u);toast('🔑 Reset!');};
-window.togU = async (id,on) => {await update(ref(db,`${P}/users/${id}`),{enabled:!on});users=users.map(u=>u.id===id?{...u,enabled:!on}:u);renderAdmUsers();toast(on?'🚫 Disabled':'✅ Enabled');};
-window.rmU = async id => {const u=users.find(x=>x.id===id);if(!confirm(`Remove "${u?.name}"?`))return;await remove(ref(db,`${P}/users/${id}`));users=users.filter(x=>x.id!==id);renderAdmUsers();toast('🗑️ Removed');};
+
+window.admM = async id => {
+  const u = users.find(x=>x.id===id);
+  try{
+    await update(ref(db,`${P}/members/${id}`), { role:'admin' });
+    toast(`👑 ${u?u.name:'They'} is an admin now`);
+  }catch(e){ console.error('Contact Diary: role change failed', e); toast('⚠️ Could not save that'); }
+};
+
+window.rmM = async id => {
+  if(id === (loggedUser && loggedUser.id)){ toast("⚠️ You can't remove yourself"); return; }
+  const u = users.find(x=>x.id===id);
+  const admins = users.filter(x=>x.role==='admin' && x.status==='approved');
+  if(u && u.role==='admin' && admins.length<=1){ toast("⚠️ Can't remove the last admin"); return; }
+  if(!confirm(`Remove "${u?u.name:'this person'}"?`)) return;
+  try{
+    await remove(ref(db,`${P}/members/${id}`));
+    toast('🗑️ Removed');
+  }catch(e){ console.error('Contact Diary: remove failed', e); toast('⚠️ Could not remove them'); }
+};
 
 // CATEGORIES
 function renderAdmCats(){
