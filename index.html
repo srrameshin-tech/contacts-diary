@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="app-build" content="20260813-0910">
+<meta name="app-build" content="20260814-0622">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Contact Diary</title>
 <link rel="manifest" href="manifest.json">
@@ -478,6 +478,30 @@ let curFilter="", curC=null, impData=[];
 // HELPERS
 const $  = id => document.getElementById(id);
 const toast = m => { const t=$('toast'); t.textContent=m; t.classList.add('on'); setTimeout(()=>t.classList.remove('on'),2200); };
+
+// A write that survives a blip. One quiet retry, then a calm line on screen.
+// Raw Firebase codes never reach the user — they go to the console and to
+// Auto Check. Returns {ok:true,value} or {ok:false}; it never throws, so a
+// failed write can no longer stop a handler halfway with nothing shown.
+// Pass failMsg = null for background writes that are not worth a message.
+const SAVE_FAIL_MSG = '\u26a0\ufe0f Could not save. Check the connection and try again.';
+async function dbWrite(fn, failMsg){
+  for(let attempt = 0; attempt < 2; attempt++){
+    try{
+      return { ok:true, value: await fn() };
+    }catch(e){
+      if(attempt === 0){
+        console.warn('Contact Diary: write failed, retrying', e && e.code);
+        await new Promise(r => setTimeout(r, 900));
+        continue;
+      }
+      console.error('Contact Diary: write failed', e);
+      try{ logAppError('Write failed', (e && e.code) || String((e && e.message) || e), failMsg || ''); }catch(_){}
+      if(failMsg !== null) toast(failMsg || SAVE_FAIL_MSG);
+      return { ok:false };
+    }
+  }
+}
 const avc = n => { const c=['#0ea5e9','#14b8a6','#6366f1','#f59e0b','#10b981','#3b82f6','#8b5cf6','#06b6d4']; let h=0; for(let x of(n||''))h=(h*31+x.charCodeAt(0))%c.length; return c[h]; };
 
 // 2-letter initials
@@ -502,7 +526,8 @@ window.toggleFav = async id => {
   const c = contacts.find(x=>x.id===id);
   if(!c) return;
   const newFav = !c.fav;
-  await set(ref(db,`${CP(loggedUser.contactsKey)}/${id}/fav`), newFav||null);
+  const w = await dbWrite(()=>set(ref(db,`${CP(loggedUser.contactsKey)}/${id}/fav`), newFav||null), '\u26a0\ufe0f Could not update. Try again.');
+  if(!w.ok) return;
   contacts = contacts.map(x=>x.id===id?{...x,fav:newFav}:x);
   renderList();
 };
@@ -901,7 +926,8 @@ window.renderList = () => {
 window.trackContact = async (id, type) => {
   const now = Date.now();
   const label = type==='call'?'📞 Called':'💬 WhatsApp';
-  await set(ref(db,`${CP(loggedUser.contactsKey)}/${id}/lastContact`),{type,label,time:now});
+  const w = await dbWrite(()=>set(ref(db,`${CP(loggedUser.contactsKey)}/${id}/lastContact`),{type,label,time:now}), null);
+  if(!w.ok) return;
   contacts = contacts.map(c=>c.id===id?{...c,lastContact:{type,label,time:now}}:c);
 };
 
@@ -987,11 +1013,14 @@ window.saveC = async () => {
   const data={name,category:$('fcat').value,fields:flds,updatedAt:Date.now(),updatedBy:loggedUser.name};
   const id=$('fid').value;
   if(id){
-    await set(ref(db,`${CP(loggedUser.contactsKey)}/${id}`),data);
+    const w = await dbWrite(()=>set(ref(db,`${CP(loggedUser.contactsKey)}/${id}`),data));
+    if(!w.ok) return;
     contacts=contacts.map(c=>c.id===id?{id,...data}:c);
   } else {
     data.createdAt=Date.now();
-    const r=await push(ref(db,CP(loggedUser.contactsKey)),data);
+    const w = await dbWrite(()=>push(ref(db,CP(loggedUser.contactsKey)),data));
+    if(!w.ok) return;
+    const r = w.value;
     contacts.push({id:r.key,...data});
     contacts.sort((a,b)=>(a.name||'').localeCompare(b.name||''));
   }
@@ -1000,7 +1029,8 @@ window.saveC = async () => {
 };
 window.delC = async () => {
   if(!curC||!confirm(`Delete "${curC.name}"?`))return;
-  await remove(ref(db,`${CP(loggedUser.contactsKey)}/${curC.id}`));
+  const w = await dbWrite(()=>remove(ref(db,`${CP(loggedUser.contactsKey)}/${curC.id}`)), '\u26a0\ufe0f Could not delete. Try again.');
+  if(!w.ok) return;
   contacts=contacts.filter(c=>c.id!==curC.id);
   $('detOv').classList.remove('on');
   renderList(); toast('🗑️ Deleted');
@@ -1033,7 +1063,9 @@ window.doImport = async () => {
     const nm=c.Name||c.name||'';if(!nm)continue;
     const flds={};const pf=fields.find(f=>f.type==='tel');
     if(pf&&(c.Phone||c.phone))flds[pf.id]=c.Phone||c.phone;
-    const r=await push(ref(db,CP(loggedUser.contactsKey)),{name:nm,category:'',fields:flds,createdAt:Date.now(),updatedBy:'Import'});
+    const w = await dbWrite(()=>push(ref(db,CP(loggedUser.contactsKey)),{name:nm,category:'',fields:flds,createdAt:Date.now(),updatedBy:'Import'}), null);
+    if(!w.ok) continue;
+    const r = w.value;
     contacts.push({id:r.key,name:nm,category:'',fields:flds});
     n++;
   }
@@ -1144,9 +1176,11 @@ window.saveCat = async () => {
   const emoji=$('newCE').value.trim()||'📌', name=$('newCN').value.trim(), id=$('editCID').value;
   if(!name){toast('⚠️ Name required');return;}
   if(id){
-    await set(ref(db,`${P}/categories/${id}`),{emoji,name});
+    const w = await dbWrite(()=>set(ref(db,`${P}/categories/${id}`),{emoji,name}));
+    if(!w.ok) return;
   } else {
-    await push(ref(db,`${P}/categories`),{emoji,name});
+    const w = await dbWrite(()=>push(ref(db,`${P}/categories`),{emoji,name}));
+    if(!w.ok) return;
   }
   closeAddCat();
   toast('✅ Category saved!');
@@ -1154,7 +1188,8 @@ window.saveCat = async () => {
 };
 window.rmCat = async (id,name) => {
   if(!confirm(`Delete "${name}"?`))return;
-  await remove(ref(db,`${P}/categories/${id}`));
+  const w = await dbWrite(()=>remove(ref(db,`${P}/categories/${id}`)), '\u26a0\ufe0f Could not delete. Try again.');
+  if(!w.ok) return;
   toast('🗑️ Deleted');
 };
 
@@ -1180,9 +1215,11 @@ window.saveF = async () => {
   const order=id?(fields.find(x=>x.id===id)?.order||0):fields.length;
   const data={name,type,emoji,placeholder,order};
   if(id){
-    await set(ref(db,`${P}/fields/${id}`),data);
+    const w = await dbWrite(()=>set(ref(db,`${P}/fields/${id}`),data));
+    if(!w.ok) return;
   } else {
-    await push(ref(db,`${P}/fields`),data);
+    const w = await dbWrite(()=>push(ref(db,`${P}/fields`),data));
+    if(!w.ok) return;
   }
   closeAddF();
   toast('✅ Field saved!');
@@ -1190,7 +1227,8 @@ window.saveF = async () => {
 };
 window.rmF = async (id,name) => {
   if(!confirm(`Delete "${name}"?`))return;
-  await remove(ref(db,`${P}/fields/${id}`));
+  const w = await dbWrite(()=>remove(ref(db,`${P}/fields/${id}`)), '\u26a0\ufe0f Could not delete. Try again.');
+  if(!w.ok) return;
   toast('🗑️ Deleted');
 };
 window.movF = async (id,dir) => {
@@ -1198,7 +1236,8 @@ window.movF = async (id,dir) => {
   if(j<0||j>=fields.length)return;
   [fields[i],fields[j]]=[fields[j],fields[i]];
   const upd={};fields.forEach((f,k)=>upd[`${P}/fields/${f.id}/order`]=k);
-  await update(ref(db),upd);
+  const w = await dbWrite(()=>update(ref(db),upd), '\u26a0\ufe0f Could not reorder. Try again.');
+  if(!w.ok){ [fields[i],fields[j]]=[fields[j],fields[i]]; return; }
 };
 
 init();
